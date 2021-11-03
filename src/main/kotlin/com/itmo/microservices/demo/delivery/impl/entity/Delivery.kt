@@ -1,6 +1,5 @@
 package com.itmo.microservices.demo.delivery.impl.entity
 
-import com.itmo.microservices.demo.stock.api.model.Category
 import java.util.*
 import javax.persistence.*
 
@@ -9,7 +8,7 @@ import javax.persistence.*
 class Delivery {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: UUID? = null
     var address: String? = null
     var date: Date? = null

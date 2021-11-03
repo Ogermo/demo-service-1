@@ -41,7 +41,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
     }
 
     override fun finalizeDelivery(deliveryId: UUID) {
-
-        TODO("Not yet implemented")
+        val delivery = deliveryRepository.findByIdOrNull(deliveryId) ?: throw NotFoundException("Order $deliveryId not found")
+        //here it kinda interacts with other services
     }
 }
