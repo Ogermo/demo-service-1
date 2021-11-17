@@ -13,11 +13,10 @@ import com.itmo.microservices.demo.orders.api.model.PaymentModel
 import com.itmo.microservices.demo.orders.api.service.OrderService
 import com.itmo.microservices.demo.orders.impl.logging.OrderServiceNotableEvents
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
-import com.itmo.microservices.demo.orders.impl.repository.PaymentRepository
+import com.itmo.microservices.demo.orders.impl.repository.OldPaymentRepository
 import com.itmo.microservices.demo.orders.impl.util.toEntity
 import com.itmo.microservices.demo.orders.impl.util.toModel
 import com.itmo.microservices.demo.users.api.service.UserService
-import org.hibernate.service.spi.InjectService
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.util.*
@@ -26,7 +25,7 @@ import javax.naming.OperationNotSupportedException
 @Suppress("UnstableApiUsage")
 @Service
 class DefaultOrderService(private val orderRepository: OrderRepository,
-                          private val paymentRepository: PaymentRepository,
+                          private val paymentRepository: OldPaymentRepository,
                           private val eventBus: EventBus,
                           private val userService: UserService) : OrderService {
 
