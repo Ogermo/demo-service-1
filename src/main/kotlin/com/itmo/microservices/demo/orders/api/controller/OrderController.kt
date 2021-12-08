@@ -1,6 +1,8 @@
 package com.itmo.microservices.demo.orders.api.controller
 
+import com.google.common.eventbus.EventBus
 import com.itmo.microservices.demo.common.exception.NotFoundException
+import com.itmo.microservices.demo.delivery.api.event.ReserveSlotEvent
 import com.itmo.microservices.demo.delivery.api.model.DeliveryModel
 import com.itmo.microservices.demo.delivery.api.service.DeliveryService
 import com.itmo.microservices.demo.orders.api.model.OrderModel
@@ -15,6 +17,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
@@ -28,7 +31,8 @@ import kotlin.collections.HashMap
 @RestController
 class OrderController(private val orderService: OrderService,
                       private val shoppingCartService: CartService,
-                      private val deliveryService: DeliveryService) {
+                      private val deliveryService: DeliveryService,
+                        private val eventBus: EventBus) {
 
     @PostMapping("/orders")
     @Operation(
@@ -73,7 +77,7 @@ class OrderController(private val orderService: OrderService,
     )
     fun book(@PathVariable order_id : UUID, @AuthenticationPrincipal user : UserDetails): Nothing = throw NotImplementedError();
 
-    @PostMapping("/orders/{order_id}/delivery?slot={slot_in_sec}")
+    @PostMapping("/orders/{order_id}/delivery")
     @Operation(
             summary = "Choosing desired slot",
             responses = [
@@ -84,7 +88,11 @@ class OrderController(private val orderService: OrderService,
             ],
             security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun deliver(@PathVariable orderId : UUID, @PathVariable slotInSec : Int) = deliveryService.reserveDeliverySlots(orderId, slotInSec)
+    fun deliver(){
+
+        eventBus.post(ReserveSlotEvent(UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"),15))
+        //deliveryService.reserveDeliverySlots(orderId, slotInSec)
+    }
 
     @GetMapping("/orders/{order_id}")
     @Operation(

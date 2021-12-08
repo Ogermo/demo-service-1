@@ -128,20 +128,20 @@ class DeliveryController(private val deliveryService: DeliveryService) {
 //    )
 //    fun getDeliveryBySlot(@PathVariable slot : Int) : DeliveryModel = deliveryService.getDeliveryBySlot(slot)
 //
-//    @PostMapping("delivery/{deliveryId}")
-//    @Operation(
-//        summary = "Set timeslot for delivery",
-//        responses = [
-//            ApiResponse(
-//                description = "OK",
-//                responseCode = "200"),
-//            ApiResponse(
-//                description = "Unauthorized",
-//                responseCode = "403",
-//                content = [io.swagger.v3.oas.annotations.media.Content()]
-//            )
-//        ],
-//        security = [SecurityRequirement(name = "bearerAuth")]
-//    )
-//    fun reserveDeliverySlots(@PathVariable deliveryId : UUID, @RequestParam slot : Int) = deliveryService.reserveDeliverySlots(deliveryId,slot)
+    @PostMapping("delivery/{deliveryId}")
+    @Operation(
+        summary = "Set timeslot for delivery",
+        responses = [
+            ApiResponse(
+                description = "OK",
+                responseCode = "200"),
+            ApiResponse(
+                description = "Unauthorized",
+                responseCode = "403",
+                content = [io.swagger.v3.oas.annotations.media.Content()]
+            )
+        ],
+        security = [SecurityRequirement(name = "bearerAuth")]
+    )
+    fun reserveDeliverySlots(@PathVariable deliveryId : UUID, @RequestParam slot : Int) = deliveryService.reserveDeliverySlots(deliveryId,slot)
 }
