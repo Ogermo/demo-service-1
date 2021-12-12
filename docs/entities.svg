@@ -14,6 +14,7 @@ entity User {
     * email: string
 }
 
+
 entity Task {
     id: UUID (generated)
     - -
