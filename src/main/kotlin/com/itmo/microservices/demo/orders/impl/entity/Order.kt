@@ -28,7 +28,7 @@ class Order {
     @ElementCollection
     var itemsMap : MutableMap<UUID, Long> = mutableMapOf()
     var deliveryDuration : Int? = null
-    @OneToMany
+    @OneToMany(mappedBy = "order304")
     var paymentHistory: List<PaymentLogRecord> = listOf()
 
 
