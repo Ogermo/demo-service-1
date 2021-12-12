@@ -13,9 +13,11 @@ import com.itmo.microservices.demo.users.impl.entity.AppUser
 import com.itmo.microservices.demo.users.api.model.AppUserModel
 import com.itmo.microservices.demo.users.api.model.RegistrationRequest
 import com.itmo.microservices.demo.users.api.model.RegistrationResult
+import com.itmo.microservices.demo.users.api.model.UserDto
 import com.itmo.microservices.demo.users.impl.logging.UserServiceNotableEvents
 import com.itmo.microservices.demo.users.impl.repository.UserRepository
 import com.itmo.microservices.demo.users.impl.util.toModel
+import com.itmo.microservices.demo.users.impl.util.toUserDto
 import org.springframework.data.jpa.domain.AbstractPersistable_.id
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.core.userdetails.UserDetails
@@ -37,7 +39,7 @@ class DefaultUserService(private val userRepository: UserRepository,
             .findByName(name)?.toModel()
         ?: throw NotFoundException("User $name not found")
 
-    override fun registerUser(request: RegistrationRequest): RegistrationResult {
+    override fun registerUser(request: RegistrationRequest): UserDto {
         val user = userRepository.findByName(request.name)
         if (user != null)
         {
@@ -49,13 +51,13 @@ class DefaultUserService(private val userRepository: UserRepository,
             eventLogger.info(UserServiceNotableEvents.I_USER_CREATED, userEntity.name)
             val id = userEntity.id
             val name = userEntity.name
-            return RegistrationResult(id, name)
+            return UserDto(id!!, name!!)
         }
     }
 
 
-    override fun getAccountData(id: UUID): AppUserModel =
-        userRepository.findByIdOrNull(id)?.toModel()
+    override fun getAccountData(id: UUID): UserDto =
+        userRepository.findByIdOrNull(id)?.toUserDto()
     ?: throw NotFoundException("User $id not found")
 
 

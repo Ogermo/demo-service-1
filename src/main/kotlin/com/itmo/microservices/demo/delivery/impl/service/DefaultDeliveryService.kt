@@ -1,5 +1,6 @@
 package com.itmo.microservices.demo.delivery.impl.service
 
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.eventbus.EventBus
 import com.itmo.microservices.commonlib.annotations.InjectEventLogger
@@ -10,10 +11,15 @@ import com.itmo.microservices.demo.delivery.api.messaging.DeliveryCreatedEvent
 import com.itmo.microservices.demo.delivery.api.messaging.DeliveryDeletedEvent
 import com.itmo.microservices.demo.delivery.api.model.DeliveryModel
 import com.itmo.microservices.demo.delivery.api.service.DeliveryService
+import com.itmo.microservices.demo.delivery.impl.entity.Delivery
 import com.itmo.microservices.demo.delivery.impl.logging.DeliveryServiceNotableEvents
 import com.itmo.microservices.demo.delivery.impl.repository.DeliveryRepository
 import com.itmo.microservices.demo.delivery.impl.util.toEntity
 import com.itmo.microservices.demo.delivery.impl.util.toModel
+import com.itmo.microservices.demo.orders.api.model.BookingDto
+import com.itmo.microservices.demo.orders.impl.entity.Order
+import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
+import com.itmo.microservices.demo.orders.impl.util.toBookingDto
 import kong.unirest.Unirest
 import kong.unirest.json.JSONObject
 import org.springframework.data.repository.findByIdOrNull
@@ -34,7 +40,8 @@ import java.util.concurrent.Executors
 
 @Service
 class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
-                             private val eventBus: EventBus) : DeliveryService {
+                             private val eventBus: EventBus,
+                             private val orderRepository: OrderRepository) : DeliveryService {
 
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
@@ -93,18 +100,21 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         return delivery
     }
 
-    override fun reserveDeliverySlots(deliveryId: UUID, slotInSec: Int) {
+    override fun reserveDeliverySlots(orderId: UUID, slotInSec: Int) : BookingDto {
         //access API, this transaction imitates sending reservation
-        transaction()
+        val json = transaction()
+        var order = orderRepository.findByIdOrNull(orderId) ?: return Order().toBookingDto(setOf())
+        deliveryRepository.save(Delivery(orderId,null,slotInSec))
+        order.deliveryDuration = slotInSec
+        orderRepository.save(order)
+        return order.toBookingDto(setOf())
         //check if available and reserve
-        val delivery = deliveryRepository.findByIdOrNull(deliveryId)
-        if (deliveryRepository.findBySlot(slotInSec) == null && deliveryRepository.findByIdOrNull(deliveryId) != null){
-            delivery!!.slot = slotInSec
-            deliveryRepository.save(delivery)
-        } else {
-            throw IllegalArgumentException("Didn't found by Id or Slot already taken")
-        }
-
+//        if (deliveryRepository.findBySlot(slotInSec) == null){
+//            deliveryRepository.save(Delivery(deliveryId,null,slotInSec))
+//            return json
+//        } else {
+//            throw IllegalArgumentException("Didn't found by Id or Slot already taken")
+//        }
     }
 
     fun transaction() : JSONObject{

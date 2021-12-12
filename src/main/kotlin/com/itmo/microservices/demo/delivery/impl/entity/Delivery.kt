@@ -9,21 +9,18 @@ import javax.persistence.Id
 @Entity
 class Delivery {
     @Id
-    var id : UUID? = null
     var orderId : UUID? = null
     var address : String? = null
     var slot : Int? = null
 
     constructor()
 
-    constructor(id : UUID?, orderId : UUID?, address: String?) {
-        this.id = id
+    constructor(orderId : UUID?, address: String?) {
         this.orderId = orderId
         this.address = address
     }
 
-    constructor(id : UUID?, orderId : UUID?, address: String?, slot: Int?) {
-        this.id = id
+    constructor(orderId : UUID?, address: String?, slot: Int?) {
         this.orderId = orderId
         this.address = address
         this.slot = slot

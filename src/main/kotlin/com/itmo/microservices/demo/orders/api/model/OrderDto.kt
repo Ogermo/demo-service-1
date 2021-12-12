@@ -1,6 +1,6 @@
 package com.itmo.microservices.demo.orders.api.model
 
-import com.itmo.microservices.demo.orders.impl.entity.OrderStatus
+import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.impl.entity.PaymentLogRecord
 import java.util.*
 

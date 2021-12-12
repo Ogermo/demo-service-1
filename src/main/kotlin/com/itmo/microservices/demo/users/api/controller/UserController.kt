@@ -2,6 +2,7 @@ package com.itmo.microservices.demo.users.api.controller
 
 import com.itmo.microservices.demo.users.api.model.AppUserModel
 import com.itmo.microservices.demo.users.api.model.RegistrationRequest
+import com.itmo.microservices.demo.users.api.model.UserDto
 import com.itmo.microservices.demo.users.api.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -37,7 +38,7 @@ class UserController(private val userService: UserService) {
         ],
         security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun getAccountData(@PathVariable user_id: UUID): AppUserModel =
+    fun getAccountData(@PathVariable user_id: UUID): UserDto =
         userService.getAccountData(user_id)
 
 

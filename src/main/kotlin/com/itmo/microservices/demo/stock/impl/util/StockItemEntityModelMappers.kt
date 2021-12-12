@@ -1,5 +1,6 @@
 package com.itmo.microservices.demo.stock.impl.util
 
+import com.itmo.microservices.demo.stock.api.model.CatalogItemDto
 import com.itmo.microservices.demo.stock.api.model.StockItemModel
 import com.itmo.microservices.demo.stock.impl.entity.StockItem
 
@@ -21,4 +22,12 @@ fun StockItem.toModel(): StockItemModel = StockItemModel(
     amount = this.amount,
     reservedCount = this.reservedCount,
     category = this.category
+)
+
+fun StockItem.toCatalogItemDto(): CatalogItemDto = CatalogItemDto(
+    id = this.id,
+    title = this.title!!,
+    description = this.description!!,
+    price = this.price ?: 100,
+    amount = this.amount!!
 )

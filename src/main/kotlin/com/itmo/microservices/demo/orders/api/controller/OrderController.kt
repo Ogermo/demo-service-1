@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import kong.unirest.json.JSONObject
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
@@ -44,7 +45,7 @@ class OrderController(private val orderService: OrderService,
     )
     fun createOrder(@AuthenticationPrincipal user: UserDetails) = orderService.createOrder()
 
-    @PutMapping("/orders/{order_id}/items/{item_id}?amount={amount}")
+    @PutMapping("/orders/{order_id}/items/{item_id}")
     @Operation(
             summary = "Put items to cart",
             responses = [
@@ -58,7 +59,7 @@ class OrderController(private val orderService: OrderService,
     fun putItemsToCart(@PathVariable order_id : UUID, @PathVariable item_id : UUID, @RequestParam(value = "amount") amount : Long = 1, @AuthenticationPrincipal user : UserDetails) = orderService.putItemToOrder(order_id, item_id, amount)
 
 
-    @DeleteMapping("/orders/{order_id}/bookings")
+    @PostMapping("/orders/{order_id}/bookings")
     @Operation(
             summary = "Finalization and booking",
             responses = [
@@ -71,7 +72,7 @@ class OrderController(private val orderService: OrderService,
     )
     fun book(@PathVariable order_id : UUID, @AuthenticationPrincipal user : UserDetails) = orderService.book(order_id, user)
 
-    @PostMapping("/orders/{order_id}/delivery?slot={slot_in_sec}")
+    @PostMapping("/orders/{order_id}/delivery")
     @Operation(
             summary = "Choosing desired slot",
             responses = [
@@ -82,19 +83,19 @@ class OrderController(private val orderService: OrderService,
             ],
             security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun deliver(@PathVariable orderId : UUID, @PathVariable slotInSec : Int) = deliveryService.reserveDeliverySlots(orderId, slotInSec)
+    fun deliver(@PathVariable order_id: UUID, @RequestParam slot : Int) = deliveryService.reserveDeliverySlots(order_id, slot)
+    //replace me with events!
 
-    @GetMapping("/orders/{order_id}")
-    @Operation(
-        summary = "Returns current order",
-        responses = [
-            ApiResponse(description = "OK", responseCode = "200"),
-            ApiResponse(description = "Bad request", responseCode = "400", content = [Content()]),
-            ApiResponse(description = "Unauthorized", responseCode = "403", content = [Content()]),
-            ApiResponse(description = "Service error", responseCode = "500", content = [Content()])
-        ],
-        security = [SecurityRequirement(name = "bearerAuth")]
-    )
-    fun getOrder(@PathVariable order_id: UUID) = orderService.getOrder(order_id)
-
-}
+        @GetMapping("/orders/{order_id}")
+        @Operation(
+            summary = "Returns current order",
+            responses = [
+                ApiResponse(description = "OK", responseCode = "200"),
+                ApiResponse(description = "Bad request", responseCode = "400", content = [Content()]),
+                ApiResponse(description = "Unauthorized", responseCode = "403", content = [Content()]),
+                ApiResponse(description = "Service error", responseCode = "500", content = [Content()])
+            ],
+            security = [SecurityRequirement(name = "bearerAuth")]
+        )
+        fun getOrder(@PathVariable order_id: UUID) = orderService.getOrder(order_id)
+    }

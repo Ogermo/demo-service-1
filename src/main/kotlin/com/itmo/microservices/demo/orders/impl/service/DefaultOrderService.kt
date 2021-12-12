@@ -11,14 +11,12 @@ import com.itmo.microservices.demo.orders.api.messaging.PaymentAssignedEvent
 import com.itmo.microservices.demo.orders.api.model.BookingDto
 import com.itmo.microservices.demo.orders.api.model.OrderDto
 import com.itmo.microservices.demo.orders.api.model.OrderModel
-import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.api.model.PaymentModel
 import com.itmo.microservices.demo.orders.api.service.OrderService
 import com.itmo.microservices.demo.orders.impl.entity.Order
-import com.itmo.microservices.demo.orders.impl.entity.OrderStatus
+import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.impl.logging.OrderServiceNotableEvents
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
-import com.itmo.microservices.demo.orders.impl.repository.PaymentRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
 import com.itmo.microservices.demo.orders.impl.util.toDto
 import com.itmo.microservices.demo.orders.impl.repository.OrderPaymentRepository
@@ -43,7 +41,6 @@ import javax.naming.OperationNotSupportedException
 @Service
 class DefaultOrderService(private val orderRepository: OrderRepository,
                           private val stockItemRepository: StockItemRepository,
-                          private val paymentRepository: PaymentRepository,
                           private val StockService: StockItemService,
                           private val eventBus: EventBus,
                           private val userService: UserService) : OrderService {
@@ -90,6 +87,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
             }
         }
         order.status = OrderStatus.BOOKED
+        orderRepository.save(order)
         return order.toBookingDto(failedItems)
     }
 //
