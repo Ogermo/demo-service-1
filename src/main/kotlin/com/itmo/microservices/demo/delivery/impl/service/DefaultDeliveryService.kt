@@ -20,13 +20,11 @@ import com.itmo.microservices.demo.orders.api.model.BookingDto
 import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
-import kong.unirest.Unirest
 import kong.unirest.json.JSONObject
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
-import java.lang.Exception
 import java.lang.RuntimeException
 import java.net.URI
 import java.net.http.HttpClient
@@ -35,8 +33,6 @@ import java.net.http.HttpResponse
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.Executors
-
 
 @Service
 class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
@@ -90,7 +86,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         //access API, this transaction imitates receiving information about available slots
         val json = transaction()
         //calculate all available slots, choose number of first
-        val temp : List<Int> = listOf(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20).minus(deliveryRepository.getAllSlots()
+        val temp : List<Int> = listOf(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30).minus(deliveryRepository.getAllSlots()
             .toSet())// some magic
         return temp.take(number)
     }
