@@ -122,7 +122,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
             .header("Content-Type", "application/json;IEEE754Compatible=true")
             .uri(URI.create("http://77.234.215.138:30027/transactions/"))
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-            .timeout(Duration.ofSeconds(3))
+            .timeout(Duration.ofSeconds(10))
             .build()
 
         while(true){
