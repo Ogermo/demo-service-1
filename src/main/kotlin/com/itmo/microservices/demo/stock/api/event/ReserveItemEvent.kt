@@ -1,4 +1,6 @@
 package com.itmo.microservices.demo.stock.api.event
 
-class ReserveItemEvent(val title: String?, val number : Int?) {
+import java.util.*
+
+class ReserveItemEvent(val id: UUID?, val number : Int?) {
 }

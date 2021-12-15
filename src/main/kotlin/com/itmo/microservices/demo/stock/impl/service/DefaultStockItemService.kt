@@ -34,18 +34,18 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
             ?: throw NotFoundException("Stock Item $stockItemId not found")
 
     //number can be negative
-    override fun reserveStockItem(stockItemId: UUID, number: Int) : Boolean {
+    override fun reserveStockItem(stockItemId: UUID?, number: Int?) : Boolean {
         val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return false
         val totalCount = stockItem.amount
         if (totalCount != null) {
-            if (totalCount < number) {
+            if (totalCount < number!!) {
                 return false
             }
         }
-                stockItem.setReservedCount(number)
+                stockItem.setReservedCount(number!!)
 
         stockItemRepository.save(stockItem)
-        eventBus.post(ReserveItemEvent(stockItem.title, number))
+        eventBus.post(ReserveItemEvent(stockItem.id, number))
         eventBus.post(StockItemReservedEvent(stockItem.toModel()))
         eventLogger.info(
             StockItemServiceNotableEvents.I_STOCK_ITEM_RESERVED,

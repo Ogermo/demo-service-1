@@ -9,8 +9,8 @@ import javax.annotation.PostConstruct
 
 @Service
 class StockEventListener {
-    /*@Autowired
-    private lateinit var stockService : StockItemService*/
+    @Autowired
+    private lateinit var stockService : StockItemService
 
     @Autowired
     private lateinit var eventBus : EventBus
@@ -32,7 +32,8 @@ class StockEventListener {
 
     @Subscribe
     fun onReserveItem(event : ReserveItemEvent){
-        println("Item " + event.title + " reserved by quantity " + event.number)
+        stockService.reserveStockItem(event.id, event.number)
+        println("Item " + event.id + " reserved by quantity " + event.number)
     }
 
     @Subscribe
