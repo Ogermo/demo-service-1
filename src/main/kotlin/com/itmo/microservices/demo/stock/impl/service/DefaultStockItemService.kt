@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus
 import com.itmo.microservices.commonlib.annotations.InjectEventLogger
 import com.itmo.microservices.commonlib.logging.EventLogger
 import com.itmo.microservices.demo.common.exception.NotFoundException
+import com.itmo.microservices.demo.stock.api.event.AddItemToCatalogueEvent
 import com.itmo.microservices.demo.stock.api.messaging.StockItemCreatedEvent
 import com.itmo.microservices.demo.stock.api.messaging.StockItemDeletedEvent
 import com.itmo.microservices.demo.stock.api.messaging.StockItemReservedEvent
@@ -59,6 +60,7 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
             val stockItemEntity = stockItemRepository.save(stockItem.toEntity())
             stockItemRepository.save(stockItemEntity)
             eventBus.post(StockItemCreatedEvent(stockItemEntity.toModel()))
+            eventBus.post(AddItemToCatalogueEvent(stockItemEntity.toModel().id, stockItemEntity.toModel()))
             eventLogger.info(
                 StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
                 stockItem
