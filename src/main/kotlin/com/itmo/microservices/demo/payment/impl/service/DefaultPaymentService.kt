@@ -1,7 +1,11 @@
 package com.itmo.microservices.demo.payment.impl.service
 
+import com.google.common.eventbus.EventBus
 import com.itmo.microservices.commonlib.annotations.InjectEventLogger
 import com.itmo.microservices.commonlib.logging.EventLogger
+import com.itmo.microservices.demo.delivery.api.model.Status
+import com.itmo.microservices.demo.orders.api.event.PaymentCreatedEvent
+import com.itmo.microservices.demo.orders.api.event.SlotReserveReponseEvent
 import com.itmo.microservices.demo.payment.api.model.PaymentSubmissionDto
 import com.itmo.microservices.demo.payment.api.model.UserAccountFinancialLogRecordDto
 import com.itmo.microservices.demo.payment.api.service.PaymentService
@@ -19,7 +23,8 @@ import com.itmo.microservices.demo.payment.impl.util.PaymentServiceMeta
 import java.lang.StringBuilder
 
 @Service
-class DefaultPaymentService(private val paymentRepository: PaymentRepository) : PaymentService {
+class DefaultPaymentService(private val paymentRepository: PaymentRepository,
+                            private val eventBus: EventBus) : PaymentService {
 
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
@@ -73,6 +78,7 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository) : 
         val transaction = makeTransaction()
 
         if (transaction.isEmpty) {
+            eventBus.post(PaymentCreatedEvent(orderId,null, Status.FAILURE))
             return PaymentSubmissionDto(0, UUID.fromString("0-0-0-0-0"))
         }
 
@@ -80,6 +86,7 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository) : 
         val status = transaction.get("status").toString()
 
         if (status == "FAILURE") {
+            eventBus.post(PaymentCreatedEvent(orderId,null, Status.FAILURE))
             return PaymentSubmissionDto(0, UUID.fromString("0-0-0-0-0"))
         }
 
@@ -102,6 +109,7 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository) : 
         paymentRepository.save(payment)
 
         eventLogger.info(PaymentServiceNotableEvents.I_PAYMENT_CREATED, submissionDto)
+        eventBus.post(PaymentCreatedEvent(orderId,payment.transactionId, Status.SUCCESS))
 
         return submissionDto
     }
