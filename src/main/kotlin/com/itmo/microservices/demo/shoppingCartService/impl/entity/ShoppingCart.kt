@@ -14,7 +14,8 @@ class ShoppingCart {
 
     constructor()
 
-    constructor(status: String) {
+    constructor(id: UUID, status: String) {
+        this.id = id
         this.status = status
     }
 }

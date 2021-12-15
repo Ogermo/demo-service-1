@@ -22,6 +22,7 @@ import com.itmo.microservices.demo.orders.impl.util.toDto
 import com.itmo.microservices.demo.orders.impl.repository.OrderPaymentRepository
 import com.itmo.microservices.demo.orders.impl.util.toEntity
 import com.itmo.microservices.demo.orders.impl.util.toModel
+import com.itmo.microservices.demo.shoppingCartService.impl.service.DefaultCartService
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
 import com.itmo.microservices.demo.stock.impl.util.toModel
@@ -42,6 +43,7 @@ import javax.naming.OperationNotSupportedException
 class DefaultOrderService(private val orderRepository: OrderRepository,
                           private val stockItemRepository: StockItemRepository,
                           private val StockService: StockItemService,
+                          private val CartService : DefaultCartService,
                           private val eventBus: EventBus,
                           private val userService: UserService) : OrderService {
 
@@ -65,6 +67,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 //    }
 //
     override fun book(orderId : UUID, user : UserDetails): BookingDto{
+        CartService.booking(orderId);
         var order = orderRepository.findByIdOrNull(orderId) ?: return Order().toBookingDto(setOf())
         var failedItems = mutableSetOf<UUID>()
         for (item in order.itemsMap){
@@ -120,6 +123,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     override fun createOrder() : OrderDto {
         val newOrder = Order()
         orderRepository.save(newOrder)
+        CartService.makeCart(newOrder.id)
         return newOrder.toDto()
     }
 
@@ -133,6 +137,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
             order.itemsMap[itemId] = amount
         }
         orderRepository.save(order)
+        CartService.putItemInCart(orderId, itemId, amount)
         return ResponseEntity.status(HttpStatus.OK).body(null)
     }
 
