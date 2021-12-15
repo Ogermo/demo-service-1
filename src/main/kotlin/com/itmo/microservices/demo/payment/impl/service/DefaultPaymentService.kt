@@ -51,15 +51,19 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository) : 
         return JSONObject()
     }
 
-    override fun getFinLog(orderId: UUID): List<UserAccountFinancialLogRecordDto> {
+    override fun getFinLog(orderId: UUID?): List<UserAccountFinancialLogRecordDto> {
         val logs = mutableListOf<UserAccountFinancialLogRecordDto>()
-        val orderPayments = paymentRepository.findByOrderId(orderId)
-
-        orderPayments.forEach {
-            logs.add(UserAccountFinancialLogRecordDto(FinancialOperationType.WITHDRAW, it.amount!!, it.orderId!!, UUID.randomUUID(), Random(0).nextLong()))
+        var orderPayments : List<Payment>
+        if (orderId != null){
+            orderPayments = paymentRepository.findByOrderId(orderId)
+            eventLogger.info(PaymentServiceNotableEvents.I_FINANCIAL_LOGS_GIVEN, orderId)
         }
-
-        eventLogger.info(PaymentServiceNotableEvents.I_FINANCIAL_LOGS_GIVEN, orderId)
+        else {
+            orderPayments = paymentRepository.findAll()
+        }
+        orderPayments.forEach {
+            logs.add(UserAccountFinancialLogRecordDto(FinancialOperationType.WITHDRAW, it.amount!!, it.orderId!!, it.transactionId!!, Random(0).nextLong()))
+        }
 
         return logs
     }
@@ -87,7 +91,7 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository) : 
 
         val payment = Payment()
 
-        payment.Id = UUID.fromString("0-0-0-0-0")
+        payment.Id = UUID.randomUUID()
         payment.orderId = orderId
         payment.transactionId = id
         payment.openTime = submitTime

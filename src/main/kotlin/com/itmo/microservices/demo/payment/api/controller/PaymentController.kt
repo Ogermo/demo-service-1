@@ -14,7 +14,7 @@ import java.util.*
 @RequestMapping("/")
 class PaymentController(private val paymentService: PaymentService) {
 
-    @GetMapping("/finlog?orderId={order_id}")
+    @GetMapping("/finlog")
     @Operation(
             summary = "Get user financial log",
             responses = [
@@ -23,9 +23,9 @@ class PaymentController(private val paymentService: PaymentService) {
             ],
             security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun getFinancialLog(@PathVariable order_id : UUID) : List<UserAccountFinancialLogRecordDto> = paymentService.getFinLog(order_id)
+    fun getFinancialLog(@RequestParam orderId : UUID?) : List<UserAccountFinancialLogRecordDto> = paymentService.getFinLog(orderId)
 
-    @GetMapping("/orders/{order_id}/payment")
+    @PostMapping("/orders/{order_id}/payment")
     @Operation(
             summary = "Make payment for order",
             responses = [

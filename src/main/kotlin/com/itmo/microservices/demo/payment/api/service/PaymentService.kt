@@ -5,6 +5,6 @@ import com.itmo.microservices.demo.payment.api.model.UserAccountFinancialLogReco
 import java.util.*
 
 interface PaymentService {
-    fun getFinLog(orderId: UUID) : List<UserAccountFinancialLogRecordDto>
+    fun getFinLog(orderId: UUID?) : List<UserAccountFinancialLogRecordDto>
     fun makePayment(orderId: UUID) : PaymentSubmissionDto
 }
