@@ -55,7 +55,7 @@ class StockItemController(private val stockItemService: StockItemService) {
         security = [SecurityRequirement(name = "bearerAuth")]
     )
     fun createStockItem(@RequestBody stockItem: StockItemModel) : StockItemModel {
-        if (stockItemService.createStockItem(stockItem) != null) {
+        if (stockItemService.createStockItem(stockItem) == null) {
             throw HttpServerErrorException(HttpStatus.METHOD_NOT_ALLOWED, "Cannot create") //405
         }
         else return stockItem

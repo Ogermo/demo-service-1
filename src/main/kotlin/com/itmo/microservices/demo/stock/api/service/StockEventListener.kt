@@ -22,6 +22,6 @@ class StockEventListener {
 
     @Subscribe
     fun onItemAddedToCatalog(event : AddItemToCatalogueEvent){
-        System.out.println("Item " + event.itemId + "with name " + event.item.title + " created.")
+        println("Item " + event.title + " created.")
     }
 }
