@@ -6,6 +6,7 @@ import com.itmo.microservices.demo.delivery.api.model.Status
 import com.itmo.microservices.demo.orders.api.event.PaymentCreatedEvent
 import com.itmo.microservices.demo.orders.api.event.SlotReserveReponseEvent
 import com.itmo.microservices.demo.orders.api.service.OrderService
+import com.itmo.microservices.demo.stock.api.event.DeleteItemEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
@@ -32,5 +33,10 @@ class OrderEventListener {
     @Subscribe
     fun onPaymentCreated(event : PaymentCreatedEvent){
         System.out.println("Response: " + event.status + " for order " + event.orderId + " transaction id " + event.transactionID)
+    }
+
+    @Subscribe
+    fun onDeletedItemFromCatalog(event : DeleteItemEvent){
+        print("Need to check all carts and orders which contain item: " + event.title)
     }
 }

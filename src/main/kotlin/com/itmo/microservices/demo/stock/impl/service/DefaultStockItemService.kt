@@ -4,7 +4,7 @@ import com.google.common.eventbus.EventBus
 import com.itmo.microservices.commonlib.annotations.InjectEventLogger
 import com.itmo.microservices.commonlib.logging.EventLogger
 import com.itmo.microservices.demo.common.exception.NotFoundException
-import com.itmo.microservices.demo.stock.api.event.AddItemToCatalogueEvent
+import com.itmo.microservices.demo.stock.api.event.*
 import com.itmo.microservices.demo.stock.api.messaging.StockItemCreatedEvent
 import com.itmo.microservices.demo.stock.api.messaging.StockItemDeletedEvent
 import com.itmo.microservices.demo.stock.api.messaging.StockItemReservedEvent
@@ -45,6 +45,7 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
                 stockItem.setReservedCount(number)
 
         stockItemRepository.save(stockItem)
+        eventBus.post(ReserveItemEvent(stockItem.title, number))
         eventBus.post(StockItemReservedEvent(stockItem.toModel()))
         eventLogger.info(
             StockItemServiceNotableEvents.I_STOCK_ITEM_RESERVED,
@@ -74,6 +75,7 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
             stockItem.setAmount(number)
             stockItemRepository.save(stockItem)
             eventBus.post(StockItemCreatedEvent(stockItem.toModel()))
+            eventBus.post(AddedItemEvent(stockItem.title, number))
             eventLogger.info(
                 StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
                 stockItem
@@ -101,6 +103,7 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
             val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return
             stockItemRepository.deleteById(stockItemId)
             eventBus.post(StockItemDeletedEvent(stockItem.toModel()))
+        eventBus.post(DeleteItemEvent(stockItem.title))
             eventLogger.info(
                 StockItemServiceNotableEvents.I_STOCK_ITEM_DELETED,
                 stockItem
@@ -113,6 +116,7 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
         stockItem.setReservedCount(-number)
         stockItemRepository.save(stockItem)
         eventBus.post(StockItemCreatedEvent(stockItem.toModel()))
+        eventBus.post(DeductItemEvent(stockItem.title, number))
         eventLogger.info(
             StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
             stockItem

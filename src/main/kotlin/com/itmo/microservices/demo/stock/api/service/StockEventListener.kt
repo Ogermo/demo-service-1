@@ -2,7 +2,7 @@ package com.itmo.microservices.demo.stock.api.service
 
 import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
-import com.itmo.microservices.demo.stock.api.event.AddItemToCatalogueEvent
+import com.itmo.microservices.demo.stock.api.event.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
@@ -23,5 +23,25 @@ class StockEventListener {
     @Subscribe
     fun onItemAddedToCatalog(event : AddItemToCatalogueEvent){
         println("Item " + event.title + " created.")
+    }
+
+    @Subscribe
+    fun onItemDeleted(event : DeleteItemEvent){
+        println("Item " + event.title + " deleted.")
+    }
+
+    @Subscribe
+    fun onReserveItem(event : ReserveItemEvent){
+        println("Item " + event.title + " reserved by quantity " + event.number)
+    }
+
+    @Subscribe
+    fun onDeductItem(event : DeductItemEvent){
+        println("Item " + event.title + " deducted by quantity " + event.number)
+    }
+
+    @Subscribe
+    fun onAddItem(event : AddedItemEvent){
+        println("Item " + event.title + " added by quantity " + event.number)
     }
 }
