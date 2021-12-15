@@ -1,6 +1,5 @@
 package com.itmo.microservices.demo.stock.api.controller
 
-import com.itmo.microservices.demo.stock.api.model.CatalogItemDto
 import com.itmo.microservices.demo.stock.api.model.StockItemModel
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.tasks.api.model.TaskModel
@@ -29,7 +28,7 @@ class StockItemController(private val stockItemService: StockItemService) {
         ],
         security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun allStockItems(@RequestParam available : Boolean): List<CatalogItemDto> = stockItemService.allStockItems()
+    fun allStockItems(@RequestParam available : Boolean): List<StockItemModel> = stockItemService.allStockItems()
 
     @GetMapping("/items/{itemId}")
     @Operation(
@@ -44,7 +43,7 @@ class StockItemController(private val stockItemService: StockItemService) {
     fun getStockItemById(@PathVariable itemId: UUID): StockItemModel =
         stockItemService.getStockItemById(itemId)
 
-    @PostMapping("/items")
+    @PostMapping("/_internal/catalogItem")
     @Operation(
         summary = "Create stockItem",
         responses = [
@@ -55,10 +54,11 @@ class StockItemController(private val stockItemService: StockItemService) {
         ],
         security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun createStockItem(@RequestBody stockItem: StockItemModel) {
-        if (!stockItemService.createStockItem(stockItem)) {
+    fun createStockItem(@RequestBody stockItem: StockItemModel) : StockItemModel {
+        if (stockItemService.createStockItem(stockItem) != null) {
             throw HttpServerErrorException(HttpStatus.METHOD_NOT_ALLOWED, "Cannot create") //405
         }
+        else return stockItem
     }
 
     @PutMapping("/items/{itemId}")
