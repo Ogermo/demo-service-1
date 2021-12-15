@@ -59,7 +59,7 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
         if (title?.let { stockItemRepository.findByTitle(it) } == null) {
             stockItemRepository.save(stockItem.toEntity())
             eventBus.post(StockItemCreatedEvent(stockItem))
-            //eventBus.post(AddItemToCatalogueEvent(stockItemEntity.toModel().id, stockItemEntity.toModel()))
+            eventBus.post(AddItemToCatalogueEvent(title))
             eventLogger.info(
                 StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
                 stockItem
