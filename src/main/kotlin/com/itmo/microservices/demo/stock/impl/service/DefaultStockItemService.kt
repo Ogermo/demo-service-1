@@ -55,17 +55,16 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
     }
 
     override fun createStockItem(stockItem: StockItemModel) : StockItemModel? {
-        val id = stockItem.id;
-        if (stockItemRepository.findByIdOrNull(id) == null) {
-            val stockItemEntity = stockItemRepository.save(stockItem.toEntity())
-            stockItemRepository.save(stockItemEntity)
-            eventBus.post(StockItemCreatedEvent(stockItemEntity.toModel()))
-            eventBus.post(AddItemToCatalogueEvent(stockItemEntity.toModel().id, stockItemEntity.toModel()))
+        val title = stockItem.title;
+        if (title?.let { stockItemRepository.findByTitle(it) } == null) {
+            stockItemRepository.save(stockItem.toEntity())
+            eventBus.post(StockItemCreatedEvent(stockItem))
+            //eventBus.post(AddItemToCatalogueEvent(stockItemEntity.toModel().id, stockItemEntity.toModel()))
             eventLogger.info(
                 StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
                 stockItem
             )
-            return stockItemEntity.toModel()
+            return stockItem
         }
         else return null
     }

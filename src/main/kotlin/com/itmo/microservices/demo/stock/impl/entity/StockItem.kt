@@ -21,9 +21,15 @@ class StockItem {
 
     constructor()
 
-    constructor(id: UUID, title: String? = null, description: String? = null, price: Int? = 100,
+    constructor(id: UUID? = null, title: String? = null, description: String? = null, price: Int? = 100,
                 amount: Int?, reservedCount: Int?, category: Category) {
-        this.id = id
+        if (id == null){
+            this.id = UUID.randomUUID()
+        }
+        else
+        {
+            this.id = id
+        }
         this.title = title
         this.description = description
         this.price = price
