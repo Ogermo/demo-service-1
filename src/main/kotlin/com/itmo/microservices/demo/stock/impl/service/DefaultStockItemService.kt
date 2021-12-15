@@ -53,7 +53,7 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
 
     }
 
-    override fun createStockItem(stockItem: StockItemModel) : Boolean {
+    override fun createStockItem(stockItem: StockItemModel) : StockItemModel? {
         val id = stockItem.id;
         if (stockItemRepository.findByIdOrNull(id) == null) {
             val stockItemEntity = stockItemRepository.save(stockItem.toEntity())
@@ -63,9 +63,9 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
                 StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
                 stockItem
             )
-            return true
+            return stockItemEntity.toModel()
         }
-        else return false
+        else return null
     }
 
     override fun addStockItem(stockItemId: UUID, number: Int) {
@@ -104,5 +104,17 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
                 StockItemServiceNotableEvents.I_STOCK_ITEM_DELETED,
                 stockItem
             )
+    }
+
+    override fun deductStockItem(stockItemId: UUID, number: Int) {
+        val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return
+        stockItem.setAmount(-number)
+        stockItem.setReservedCount(-number)
+        stockItemRepository.save(stockItem)
+        eventBus.post(StockItemCreatedEvent(stockItem.toModel()))
+        eventLogger.info(
+            StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
+            stockItem
+        )
     }
 }

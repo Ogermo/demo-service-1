@@ -43,7 +43,7 @@ class StockItemController(private val stockItemService: StockItemService) {
     fun getStockItemById(@PathVariable itemId: UUID): StockItemModel =
         stockItemService.getStockItemById(itemId)
 
-    @PostMapping("/items")
+    @PostMapping("/_internal/catalogItem")
     @Operation(
         summary = "Create stockItem",
         responses = [
@@ -54,10 +54,11 @@ class StockItemController(private val stockItemService: StockItemService) {
         ],
         security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun createStockItem(@RequestBody stockItem: StockItemModel) {
-        if (!stockItemService.createStockItem(stockItem)) {
+    fun createStockItem(@RequestBody stockItem: StockItemModel) : StockItemModel {
+        if (stockItemService.createStockItem(stockItem) != null) {
             throw HttpServerErrorException(HttpStatus.METHOD_NOT_ALLOWED, "Cannot create") //405
         }
+        else return stockItem
     }
 
     @PutMapping("/items/{itemId}")
@@ -103,6 +104,19 @@ class StockItemController(private val stockItemService: StockItemService) {
         }
     }
 
+    @PutMapping("/items/{itemId}/deduct/{number}")
+    @Operation(
+        summary = "Deduct stock item",
+        responses = [
+            ApiResponse(description = "OK", responseCode = "200"),
+            ApiResponse(description = "Bad request", responseCode = "400", content = [Content()]),
+            ApiResponse(description = "Unauthorized", responseCode = "403", content = [Content()])
+                    ],
+        security = [SecurityRequirement(name = "bearerAuth")]
+    )
+    fun deductStockItem(@PathVariable itemId: UUID, @PathVariable number: Int) {
+        stockItemService.deductStockItem(itemId, number)
+    }
 
     @DeleteMapping("/items/{itemId}")
     @Operation(

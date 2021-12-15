@@ -14,7 +14,7 @@ fun StockItemModel.toEntity(): StockItem = StockItem(
 )
 
 fun StockItem.toModel(): StockItemModel = StockItemModel(
-    id = this.id,
+    id = this.id!!,
     title = this.title,
     description = this.description,
     price = this.price,

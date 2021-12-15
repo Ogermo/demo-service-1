@@ -11,13 +11,7 @@ import javax.persistence.*
 class StockItem {
 
     @Id
-    @Type(type = "uuid-char")
-    @GenericGenerator(
-        name = "UUID",
-        strategy = "org.hibernate.id.UUIDGenerator"
-    )
-    //@GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: UUID = UUID.randomUUID()
+    var id: UUID? = null
     var title: String? = null
     var description: String? = null
     var price: Int? = 100
