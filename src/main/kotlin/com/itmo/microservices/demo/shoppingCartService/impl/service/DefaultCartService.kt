@@ -43,8 +43,8 @@ class DefaultCartService(private val shoppingCartRepository: ShoppingCartReposit
         var catalogItem = catalogItemRepository.findByIdOrNull(catalogItemId)
         if (catalogItem == null) {
             val stockItem = stockItemRepository.findByIdOrNull(catalogItemId)
-            if (stockItem != null){
-                catalogItem = CatalogItem(stockItem.id, stockItem.id, stockItem.amount)
+            if (stockItem?.id != null){
+                catalogItem = CatalogItem(stockItem.id!!, stockItem.id!!, stockItem.amount)
                 }
             else {
                 return null
@@ -53,15 +53,13 @@ class DefaultCartService(private val shoppingCartRepository: ShoppingCartReposit
         return CatalogItemDTO(catalogItem.id, catalogItem.productId, catalogItem.amount)
     }
 
-    override fun makeCart(): ShoppingCartDTO? {
-        val cart = ShoppingCart(ShoppingCartStatus.active())
+    override fun makeCart(id : UUID) {
+        val cart = ShoppingCart(id, ShoppingCartStatus.active())
 
         shoppingCartRepository.save(cart)
-
-        return getCart(cart.id)
     }
 
-    override fun putItemInCart(cartId: UUID, catalogItemId: UUID, amount: Int) {
+    override fun putItemInCart(cartId: UUID, catalogItemId: UUID, amount: Long) {
         val shoppingCartDTO = getCart(cartId)
         val catalogItemDTO = getCatalogItem(catalogItemId)
 
@@ -74,7 +72,7 @@ class DefaultCartService(private val shoppingCartRepository: ShoppingCartReposit
                 shoppingCartDTO.items[shoppingCartDTO.items.indexOf(catalogItemDTO)].amount?.plus(amount)
             }
             else{
-                shoppingCartDTO.items[shoppingCartDTO.items.indexOf(catalogItemDTO)].amount = amount
+                shoppingCartDTO.items[shoppingCartDTO.items.indexOf(catalogItemDTO)].amount = amount.toInt()
             }
         }
         else {
@@ -92,5 +90,15 @@ class DefaultCartService(private val shoppingCartRepository: ShoppingCartReposit
         catalogItemRepository.save(catalogItem)
 
         return CatalogItemDTO(catalogItem.id, catalogItem.productId, catalogItem.amount)
+    }
+
+    override fun booking(cartId:UUID){
+        val currentCart = shoppingCartRepository.findByIdOrNull(cartId)
+        if (currentCart != null) {
+            currentCart.status = ShoppingCartStatus.closed()
+        }
+        if (currentCart != null) {
+            shoppingCartRepository.save(currentCart)
+        }
     }
 }
