@@ -1,14 +1,19 @@
 package com.itmo.microservices.demo.orders.api.controller
 
+import com.google.common.eventbus.EventBus
 import com.itmo.microservices.demo.common.exception.NotFoundException
+import com.itmo.microservices.demo.delivery.api.event.ReserveSlotEvent
 import com.itmo.microservices.demo.delivery.api.model.DeliveryModel
 import com.itmo.microservices.demo.delivery.api.service.DeliveryService
+import com.itmo.microservices.demo.orders.api.model.BookingDto
 import com.itmo.microservices.demo.orders.api.model.OrderModel
 import com.itmo.microservices.demo.orders.api.model.OrderModelDTO
 import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.api.service.OrderService
 import com.itmo.microservices.demo.orders.impl.service.DefaultOrderService
 import com.itmo.microservices.demo.orders.impl.entity.Order
+import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
+import com.itmo.microservices.demo.orders.impl.util.toBookingDto
 import com.itmo.microservices.demo.orders.impl.util.toEntity
 import com.itmo.microservices.demo.shoppingCartService.api.model.ShoppingCartDTO
 import com.itmo.microservices.demo.shoppingCartService.api.service.CartService
@@ -17,6 +22,7 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import kong.unirest.json.JSONObject
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
@@ -29,8 +35,11 @@ import kotlin.collections.HashMap
 
 @RestController
 class OrderController(private val orderService: OrderService,
+                      private val orderRepository: OrderRepository,
                       private val shoppingCartService: CartService,
-                      private val deliveryService: DeliveryService) {
+                      private val deliveryService: DeliveryService,
+                      private val eventBus: EventBus
+) {
 
     @PostMapping("/orders")
     @Operation(
@@ -83,7 +92,11 @@ class OrderController(private val orderService: OrderService,
             ],
             security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun deliver(@PathVariable order_id: UUID, @RequestParam slot : Int) = deliveryService.reserveDeliverySlots(order_id, slot)
+    fun deliver(@PathVariable order_id: UUID, @RequestParam slot : Int): BookingDto {
+        eventBus.post(ReserveSlotEvent(order_id,slot))
+        var order = orderRepository.findByIdOrNull(order_id) ?: return Order().toBookingDto(setOf())
+        return order.toBookingDto(setOf())
+    }
     //replace me with events!
 
         @GetMapping("/orders/{order_id}")

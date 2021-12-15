@@ -10,12 +10,14 @@ import com.itmo.microservices.demo.delivery.DeliveryExternalService.ExecutorsFac
 import com.itmo.microservices.demo.delivery.api.messaging.DeliveryCreatedEvent
 import com.itmo.microservices.demo.delivery.api.messaging.DeliveryDeletedEvent
 import com.itmo.microservices.demo.delivery.api.model.DeliveryModel
+import com.itmo.microservices.demo.delivery.api.model.Status
 import com.itmo.microservices.demo.delivery.api.service.DeliveryService
 import com.itmo.microservices.demo.delivery.impl.entity.Delivery
 import com.itmo.microservices.demo.delivery.impl.logging.DeliveryServiceNotableEvents
 import com.itmo.microservices.demo.delivery.impl.repository.DeliveryRepository
 import com.itmo.microservices.demo.delivery.impl.util.toEntity
 import com.itmo.microservices.demo.delivery.impl.util.toModel
+import com.itmo.microservices.demo.orders.api.event.SlotReserveReponseEvent
 import com.itmo.microservices.demo.orders.api.model.BookingDto
 import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
@@ -99,10 +101,15 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
     override fun reserveDeliverySlots(orderId: UUID, slotInSec: Int) : BookingDto {
         //access API, this transaction imitates sending reservation
         val json = transaction()
-        var order = orderRepository.findByIdOrNull(orderId) ?: return Order().toBookingDto(setOf())
+        var order = orderRepository.findByIdOrNull(orderId)
+        if (order == null){
+            eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.FAILURE))
+            return Order().toBookingDto(setOf())
+        }
         deliveryRepository.save(Delivery(orderId,null,slotInSec))
         order.deliveryDuration = slotInSec
         orderRepository.save(order)
+        eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.SUCCESS))
         return order.toBookingDto(setOf())
         //check if available and reserve
 //        if (deliveryRepository.findBySlot(slotInSec) == null){
