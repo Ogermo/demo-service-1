@@ -7,12 +7,10 @@ import com.itmo.microservices.demo.common.exception.NotFoundException
 import com.itmo.microservices.demo.stock.api.messaging.StockItemCreatedEvent
 import com.itmo.microservices.demo.stock.api.messaging.StockItemDeletedEvent
 import com.itmo.microservices.demo.stock.api.messaging.StockItemReservedEvent
-import com.itmo.microservices.demo.stock.api.model.CatalogItemDto
 import com.itmo.microservices.demo.stock.api.model.StockItemModel
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.logging.StockItemServiceNotableEvents
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
-import com.itmo.microservices.demo.stock.impl.util.toCatalogItemDto
 import com.itmo.microservices.demo.stock.impl.util.toEntity
 import com.itmo.microservices.demo.stock.impl.util.toModel
 import org.springframework.data.repository.findByIdOrNull
@@ -27,8 +25,8 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
 
-    override fun allStockItems(): List<CatalogItemDto> = stockItemRepository.findAll()
-        .map { it.toCatalogItemDto() }
+    override fun allStockItems(): List<StockItemModel> = stockItemRepository.findAll()
+        .map { it.toModel() }
 
     override fun getStockItemById(stockItemId: UUID): StockItemModel =
         stockItemRepository.findByIdOrNull(stockItemId)?.toModel()
@@ -55,7 +53,7 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
 
     }
 
-    override fun createStockItem(stockItem: StockItemModel) : Boolean {
+    override fun createStockItem(stockItem: StockItemModel) : StockItemModel? {
         val id = stockItem.id;
         if (stockItemRepository.findByIdOrNull(id) == null) {
             val stockItemEntity = stockItemRepository.save(stockItem.toEntity())
@@ -65,9 +63,9 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
                 StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
                 stockItem
             )
-            return true
+            return stockItemEntity.toModel()
         }
-        else return false
+        else return null
     }
 
     override fun addStockItem(stockItemId: UUID, number: Int) {
