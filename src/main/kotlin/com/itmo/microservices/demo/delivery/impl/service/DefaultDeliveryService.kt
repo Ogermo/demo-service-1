@@ -128,43 +128,39 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         val requestBody = objectMapper.writeValueAsString(values)
         val request = HttpRequest.newBuilder()
             .header("Content-Type", "application/json;IEEE754Compatible=true")
-            .uri(URI.create("http://127.0.0.1:30027/transactions/")) // replace with environment
+            .uri(URI.create("http://tps:8080/transactions/")) // replace with environment
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .timeout(Duration.ofSeconds(10))
             .build()
 
+
         while(true){
             tries++
             if (tries == 6) throw UnableToReachExternalServiceException()
-            //var future = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-            var response = Unirest.post("http://77.234.215.138:30027/transactions/")
-                .header("Content-Type", "application/json;IEEE754Compatible=true")
-                .body("{\"clientSecret\": \"7d65037f-e9af-433e-8e3f-a3da77e019b1\"}")
-                .asJson()
-            if (response.status != 200){
+            var future = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+//            var response = Unirest.post("http://77.234.215.138:30027/transactions/")
+//                .header("Content-Type", "application/json;IEEE754Compatible=true")
+//                .body("{\"clientSecret\": \"7d65037f-e9af-433e-8e3f-a3da77e019b1\"}")
+//                .asJson()
+            var response : HttpResponse<String>
+            try{
+                response = future.get()
+            }
+            catch (ex: ExecutionException)
+            {
+                Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
                 continue
             }
-            var json = JSONObject(response.body)
-            return json
-//            var response : HttpResponse<String>
-//            try{
-//                response = future.get()
-//            }
-//            catch (ex: ExecutionException)
-//            {
-//                Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
-//                continue
-//            }
-//            if (response.statusCode() != 200){
-//                //wait
-//                Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
-//                continue
-//            }
-//            var json = JSONObject(response.body())
-//            if (json.get("status").equals("SUCCESS")){
-//                return json
-//            }
-//            Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
+            if (response.statusCode() != 200){
+                //wait
+                Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
+                continue
+            }
+            var json = JSONObject(response.body())
+            if (json.get("status").equals("SUCCESS")){
+                return json
+            }
+            Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
         }
     }
 }
