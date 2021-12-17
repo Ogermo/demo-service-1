@@ -22,6 +22,7 @@ import com.itmo.microservices.demo.orders.api.model.BookingDto
 import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
+import kong.unirest.Unirest
 import kong.unirest.json.JSONObject
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -135,30 +136,35 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         while(true){
             tries++
             if (tries == 6) throw UnableToReachExternalServiceException()
-            var future = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-//            var response = Unirest.post("http://77.234.215.138:30027/transactions/")
-//                .header("Content-Type", "application/json;IEEE754Compatible=true")
-//                .body("{\"clientSecret\": \"7d65037f-e9af-433e-8e3f-a3da77e019b1\"}")
-//                .asJson()
-            var response : HttpResponse<String>
-            try{
-                response = future.get()
-            }
-            catch (ex: ExecutionException)
-            {
-                Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
+            //var future = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+            var response = Unirest.post("http://77.234.215.138:30027/transactions/")
+                .header("Content-Type", "application/json;IEEE754Compatible=true")
+                .body("{\"clientSecret\": \"7d65037f-e9af-433e-8e3f-a3da77e019b1\"}")
+                .asJson()
+            if (response.status != 200){
                 continue
             }
-            if (response.statusCode() != 200){
-                //wait
-                Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
-                continue
-            }
-            var json = JSONObject(response.body())
-            if (json.get("status").equals("SUCCESS")){
-                return json
-            }
-            Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
+            var json = JSONObject(response.body)
+            return json
+//            var response : HttpResponse<String>
+//            try{
+//                response = future.get()
+//            }
+//            catch (ex: ExecutionException)
+//            {
+//                Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
+//                continue
+//            }
+//            if (response.statusCode() != 200){
+//                //wait
+//                Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
+//                continue
+//            }
+//            var json = JSONObject(response.body())
+//            if (json.get("status").equals("SUCCESS")){
+//                return json
+//            }
+//            Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
         }
     }
 }
