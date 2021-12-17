@@ -22,13 +22,13 @@ import java.util.*
 //    userId = this.userId,
 //    status = this.status
 //)
-fun Order.toDto() : OrderDto = OrderDto(
+fun Order.toDto(itemsMap: Map<UUID, Long>) : OrderDto = OrderDto(
     id = this.id,
     timeCreated = this.timeCreated,
     status = this.status,
-    itemsMap = this.itemsMap,
+    itemsMap = itemsMap,
     deliveryDuration = this.deliveryDuration,
-    paymentHistory = this.paymentHistory
+    paymentHistory = listOf()
 )
 fun Order.toBookingDto(failed : Set<UUID>) : BookingDto = BookingDto(
     id = this.id,

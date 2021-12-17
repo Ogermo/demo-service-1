@@ -15,7 +15,9 @@ import com.itmo.microservices.demo.orders.api.model.PaymentModel
 import com.itmo.microservices.demo.orders.api.service.OrderService
 import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.api.model.OrderStatus
+import com.itmo.microservices.demo.orders.impl.entity.OrderItems
 import com.itmo.microservices.demo.orders.impl.logging.OrderServiceNotableEvents
+import com.itmo.microservices.demo.orders.impl.repository.OrderItemsRepository
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
 import com.itmo.microservices.demo.orders.impl.util.toDto
@@ -42,6 +44,7 @@ import javax.naming.OperationNotSupportedException
 @Suppress("UnstableApiUsage")
 @Service
 class DefaultOrderService(private val orderRepository: OrderRepository,
+                          private val orderItemsRepository: OrderItemsRepository,
                           private val stockItemRepository: StockItemRepository,
                           private val StockService: StockItemService,
                           private val CartService : DefaultCartService,
@@ -71,23 +74,24 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         CartService.booking(orderId);
         var order = orderRepository.findByIdOrNull(orderId) ?: return Order().toBookingDto(setOf())
         var failedItems = mutableSetOf<UUID>()
-        for (item in order.itemsMap){
-            var stockItem = stockItemRepository.findByIdOrNull(item.key)
+        var itemsMap = orderItemsRepository.findByOrderId(orderId)
+        for (item in itemsMap){
+            var stockItem = stockItemRepository.findByIdOrNull(item.itemId)
             if (stockItem == null){
 
-                failedItems.add(item.key)
-            } else if (stockItem.amount!! < item.value){
-                failedItems.add(item.key)
+                failedItems.add(item.itemId!!)
+            } else if (stockItem.amount!! < item.amount!!){
+                failedItems.add(item.itemId!!)
             } else{
 
                 var Am = stockItem.amount
                 if (Am != null) {
                     //StockService.reserveStockItem(item.key, item.value.toInt())
-                    eventBus.post(ReserveItemEvent(item.key, item.value.toInt()))
+                    eventBus.post(ReserveItemEvent(item.itemId!!, item.amount!!.toInt()))
                 }
                 else{
 
-                    failedItems.add(item.key)
+                    failedItems.add(item.itemId!!)
                 }
             }
         }
@@ -126,25 +130,38 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         val newOrder = Order()
         orderRepository.save(newOrder)
         CartService.makeCart(newOrder.id)
-        return newOrder.toDto()
+        return newOrder.toDto(mapOf())
     }
 
     override fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Long): ResponseEntity<Nothing> {
-        var order = orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
-        if (itemId in order.itemsMap.keys){
-            var currentAmount = order.itemsMap[itemId] ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
-            order.itemsMap[itemId] = amount + currentAmount
+        orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        var itemList = orderItemsRepository.findByOrderId(orderId)
+        for (x in itemList){
+            if(x.itemId!!.equals(itemId)){
+                var currentAmount = x.amount ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+                orderItemsRepository.save(OrderItems(x.id,orderId,itemId,currentAmount + amount))
+                CartService.putItemInCart(orderId, itemId, amount)
+                return ResponseEntity.status(HttpStatus.OK).body(null)
+            }
         }
-        else{
-            order.itemsMap[itemId] = amount
-        }
-        orderRepository.save(order)
-        CartService.putItemInCart(orderId, itemId, amount)
+        orderItemsRepository.save(OrderItems(null,orderId,itemId,amount))
         return ResponseEntity.status(HttpStatus.OK).body(null)
+
+    //        var order = orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+//        if (itemId in order.itemsMap.keys){
+//            var currentAmount = order.itemsMap[itemId] ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+//            order.itemsMap[itemId] = amount + currentAmount
+//        }
+//        else{
+//            order.itemsMap[itemId] = amount
+//        }
+//        orderRepository.save(order)
+//        CartService.putItemInCart(orderId, itemId, amount)
+//        return ResponseEntity.status(HttpStatus.OK).body(null)
     }
 
     override fun getOrder(orderId: UUID): OrderDto {
-        val order = orderRepository.findByIdOrNull(orderId) ?: return Order().toDto()
-        return order.toDto()
+        val order = orderRepository.findByIdOrNull(orderId) ?: return Order().toDto(mapOf())
+        return order.toDto(orderItemsRepository.findByOrderId(orderId).map{it.itemId!! to it.amount!!}.toMap())
     }
 }

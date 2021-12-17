@@ -25,11 +25,7 @@ class Order {
     var status : OrderStatus = OrderStatus.COLLECTING
     var basketId : UUID? = null
     var userId : UUID = UUID.randomUUID()
-    @ElementCollection
-    var itemsMap : MutableMap<UUID, Long> = mutableMapOf()
     var deliveryDuration : Int? = null
-    @ElementCollection
-    var paymentHistory: List<PaymentLogRecord> = listOf()
 
 
     constructor()
