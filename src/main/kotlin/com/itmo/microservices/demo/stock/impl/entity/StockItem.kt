@@ -11,7 +11,7 @@ import javax.persistence.*
 class StockItem {
 
     @Id
-    var id: UUID = UUID.randomUUID()
+    var id: UUID? = null
     var title: String? = null
     var description: String? = null
     var price: Int? = 100
@@ -21,10 +21,8 @@ class StockItem {
 
     constructor()
 
-//    constructor(id: UUID? = null, title: String? = null, description: String? = null, price: Int? = 100,
- //               amount: Int?, reservedCount: Int?, category: Category) {
-    constructor(title: String? = null, description: String? = null, price: Int? = 100,
-            amount: Int?) {
+    constructor(id: UUID? = null, title: String? = null, description: String? = null, price: Int? = 100,
+                amount: Int?, reservedCount: Int?, category: Category) {
         if (id == null){
             this.id = UUID.randomUUID()
         }
