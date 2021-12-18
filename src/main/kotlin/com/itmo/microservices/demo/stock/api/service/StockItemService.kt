@@ -13,5 +13,5 @@ interface StockItemService {
     fun reserveStockItem(stockItemId: UUID?, number: Int?) : Boolean
     fun deleteStockItemById(stockItemId: UUID)
     fun changeStockItem(stockItemId: UUID, stockItem: StockItemModel)
-    fun deductStockItem(stockItemId: UUID, number: Int)
+    fun deductStockItem(stockItemId: UUID, number: Int) : Boolean
 }

@@ -12,17 +12,17 @@ class StockItem {
 
     @Id
     var id: UUID? = null
-    var title: String? = null
-    var description: String? = null
+    var title: String? = ""
+    var description: String? = ""
     var price: Int? = 100
-    var amount: Int? = null
-    var reservedCount: Int? = null
+    var amount: Int? = 0
+    var reservedCount: Int? = 0
     var category: Category = Category.COMMON
 
     constructor()
 
-    constructor(id: UUID? = null, title: String? = null, description: String? = null, price: Int? = 100,
-                amount: Int?, reservedCount: Int?, category: Category) {
+    constructor(id: UUID? = null, title: String? = "", description: String? = "", price: Int? = 100,
+                amount: Int? = 0, reservedCount: Int? = 0, category: Category) {
         if (id == null){
             this.id = UUID.randomUUID()
         }

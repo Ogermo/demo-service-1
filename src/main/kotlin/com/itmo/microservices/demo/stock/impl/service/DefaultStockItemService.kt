@@ -112,8 +112,14 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
             )
     }
 
-    override fun deductStockItem(stockItemId: UUID, number: Int) {
-        val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return
+    override fun deductStockItem(stockItemId: UUID, number: Int) : Boolean {
+        val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return false
+        val totalCount = stockItem.amount
+        if (totalCount != null) {
+            if (totalCount < number!!) {
+                return false
+            }
+        }
         stockItem.setAmount(-number)
         stockItem.setReservedCount(-number)
         stockItemRepository.save(stockItem)
@@ -123,5 +129,6 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
             StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
             stockItem
         )
+        return true
     }
 }

@@ -112,12 +112,16 @@ class StockItemController(private val stockItemService: StockItemService) {
         responses = [
             ApiResponse(description = "OK", responseCode = "200"),
             ApiResponse(description = "Bad request", responseCode = "400", content = [Content()]),
-            ApiResponse(description = "Unauthorized", responseCode = "403", content = [Content()])
+            ApiResponse(description = "Unauthorized", responseCode = "403", content = [Content()]),
+                ApiResponse(description = "Incorrect input", responseCode = "405", content = [Content()])
                     ],
         security = [SecurityRequirement(name = "bearerAuth")]
     )
     fun deductStockItem(@PathVariable itemId: UUID, @PathVariable number: Int) {
-        stockItemService.deductStockItem(itemId, number)
+        if (!stockItemService.deductStockItem(itemId, number)) {
+            throw HttpServerErrorException(HttpStatus.METHOD_NOT_ALLOWED, "Cannot deduct") //405
+        }
+
     }
 
     @DeleteMapping("/items/{itemId}")
