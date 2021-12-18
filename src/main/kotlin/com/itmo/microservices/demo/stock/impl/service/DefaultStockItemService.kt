@@ -8,10 +8,12 @@ import com.itmo.microservices.demo.stock.api.event.*
 import com.itmo.microservices.demo.stock.api.messaging.StockItemCreatedEvent
 import com.itmo.microservices.demo.stock.api.messaging.StockItemDeletedEvent
 import com.itmo.microservices.demo.stock.api.messaging.StockItemReservedEvent
+import com.itmo.microservices.demo.stock.api.model.CatalogItemDto
 import com.itmo.microservices.demo.stock.api.model.StockItemModel
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.logging.StockItemServiceNotableEvents
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
+import com.itmo.microservices.demo.stock.impl.util.toDto
 import com.itmo.microservices.demo.stock.impl.util.toEntity
 import com.itmo.microservices.demo.stock.impl.util.toModel
 import org.springframework.data.repository.findByIdOrNull
@@ -26,8 +28,8 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
 
-    override fun allStockItems(): List<StockItemModel> = stockItemRepository.findAll()
-        .map { it.toModel() }
+    override fun allStockItems(): List<CatalogItemDto> = stockItemRepository.findAll()
+        .map { it.toDto() }
 
     override fun getStockItemById(stockItemId: UUID): StockItemModel =
         stockItemRepository.findByIdOrNull(stockItemId)?.toModel()
@@ -54,17 +56,18 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
 
     }
 
-    override fun createStockItem(stockItem: StockItemModel) : StockItemModel? {
+    override fun createStockItem(stockItem: StockItemModel) : CatalogItemDto? {
         val title = stockItem.title;
         if (title?.let { stockItemRepository.findByTitle(it) } == null) {
-            stockItemRepository.save(stockItem.toEntity())
+            val entity  = stockItem.toEntity()
+            stockItemRepository.save(entity)
             eventBus.post(StockItemCreatedEvent(stockItem))
             eventBus.post(AddItemToCatalogueEvent(title))
             eventLogger.info(
                 StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
                 stockItem
             )
-            return stockItem
+            return entity.toDto()
         }
         else return null
     }
@@ -86,10 +89,10 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
         val stockItemFromDb = stockItemRepository.findByIdOrNull(stockItemId) ?: return
         stockItemFromDb.title = stockItem.title
         stockItemFromDb.description = stockItem.description
-        stockItemFromDb.reservedCount = stockItem.reservedCount
+        //stockItemFromDb.reservedCount = stockItem.reservedCount
         stockItemFromDb.amount = stockItem.amount
         stockItemFromDb.price = stockItem.price
-        stockItemFromDb.category = stockItem.category
+        //stockItemFromDb.category = stockItem.category
         stockItemRepository.save(stockItemFromDb)
         eventBus.post(StockItemCreatedEvent(stockItemFromDb.toModel()))
         eventLogger.info(
