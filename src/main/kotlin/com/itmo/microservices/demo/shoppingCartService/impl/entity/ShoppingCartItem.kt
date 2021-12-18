@@ -4,7 +4,7 @@ import java.util.UUID
 import javax.persistence.*
 
 @Entity
-@Table(name="CartItem304")
+@Table(name="cart_item")
 class ShoppingCartItem {
 
     @Id

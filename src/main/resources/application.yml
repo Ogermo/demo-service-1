@@ -2,7 +2,7 @@ spring:
   application:
     name: demo-service
   datasource:
-    url: jdbc:postgresql://postgresql:5432/demo_db
+    url: jdbc:postgresql://postgresql:5432/service_304
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -13,7 +13,7 @@ spring:
   flyway:
     enabled: true
     validate-on-migrate: true
-
+    baselineOnMigrate: true
 server:
   error:
     include-exception: false

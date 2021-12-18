@@ -7,7 +7,7 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Entity
-@Table(name = "payment304")
+@Table(name = "old_payment")
 data class OldPayment (
     @Id
     val orderId : UUID? = null,

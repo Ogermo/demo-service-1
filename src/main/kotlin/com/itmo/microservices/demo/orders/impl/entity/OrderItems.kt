@@ -5,8 +5,10 @@ import org.hibernate.annotations.Type
 import java.util.*
 import javax.persistence.Entity
 import javax.persistence.Id
+import javax.persistence.Table
 
 @Entity
+@Table(name = "order_items")
 class OrderItems {
     @Id
     @Type(type = "uuid-char")

@@ -6,7 +6,7 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Entity
-@Table(name = "paymentLogs")
+@Table(name = "payment_log_record")
 class PaymentLogRecord {
 
     @Id

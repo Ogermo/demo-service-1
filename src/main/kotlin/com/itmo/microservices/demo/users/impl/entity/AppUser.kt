@@ -3,8 +3,10 @@ package com.itmo.microservices.demo.users.impl.entity
 import java.util.*
 import javax.persistence.Entity
 import javax.persistence.Id
+import javax.persistence.Table
 
 @Entity
+@Table(name = "app_user")
 class AppUser {
 
     @Id

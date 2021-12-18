@@ -45,7 +45,6 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
                 stockItem.setReservedCount(number!!)
 
         stockItemRepository.save(stockItem)
-        eventBus.post(ReserveItemEvent(stockItem.id, number))
         eventBus.post(StockItemReservedEvent(stockItem.toModel()))
         eventLogger.info(
             StockItemServiceNotableEvents.I_STOCK_ITEM_RESERVED,

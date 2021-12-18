@@ -11,15 +11,15 @@ import javax.persistence.*
 import kotlin.collections.HashMap
 
 @Entity
-@Table(name = "order304")
+@Table(name = "orders") // not order! will be problems
 @JsonInclude(JsonInclude.Include.NON_NULL)
 class Order {
     @Id
-    @Type(type = "uuid-char")
-    @GenericGenerator(
-        name = "UUID",
-        strategy = "org.hibernate.id.UUIDGenerator"
-    )
+//    @Type(type = "uuid-char")
+//    @GenericGenerator(
+//        name = "UUID",
+//        strategy = "org.hibernate.id.UUIDGenerator"
+//    )
     var id : UUID = UUID.randomUUID()
     var timeCreated : Long = 0
     var status : OrderStatus = OrderStatus.COLLECTING

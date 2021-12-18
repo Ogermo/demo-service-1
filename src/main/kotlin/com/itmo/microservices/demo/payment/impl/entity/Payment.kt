@@ -9,7 +9,7 @@ import javax.persistence.Id
 import javax.persistence.Table
 
 @Entity
-@Table(name = "payment304")
+@Table(name = "payment")
 data class Payment (
     @Id
     @Type(type = "uuid-char")

@@ -2,8 +2,11 @@ package com.itmo.microservices.demo.notifications.impl.entity
 
 import javax.persistence.Entity
 import javax.persistence.Id
+import javax.persistence.Table
 
 @Entity
+@Table(name = "notification_user")
+
 class NotificationUser {
     @Id
     var name: String? = null

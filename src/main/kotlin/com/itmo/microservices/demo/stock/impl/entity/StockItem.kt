@@ -11,7 +11,7 @@ import javax.persistence.*
 class StockItem {
 
     @Id
-    var id: UUID? = null
+    var id: UUID = UUID.randomUUID()
     var title: String? = null
     var description: String? = null
     var price: Int? = 100

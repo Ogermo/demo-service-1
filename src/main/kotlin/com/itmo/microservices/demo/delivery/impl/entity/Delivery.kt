@@ -1,12 +1,10 @@
 package com.itmo.microservices.demo.delivery.impl.entity
 
 import java.util.*
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
+import javax.persistence.*
 
 @Entity
+@Table(name = "delivery")
 class Delivery {
     @Id
     var orderId : UUID? = null

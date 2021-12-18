@@ -5,7 +5,7 @@ import java.util.*
 import javax.persistence.*
 
 @Entity
-@Table(name="Cart304")
+@Table(name="cart")
 class ShoppingCart {
     @Id
     var id : UUID = UUID.randomUUID()
