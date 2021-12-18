@@ -128,7 +128,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         val requestBody = objectMapper.writeValueAsString(values)
         val request = HttpRequest.newBuilder()
             .header("Content-Type", "application/json;IEEE754Compatible=true")
-            .uri(URI.create("http://77.234.215.138:30027/transactions/")) // replace with environment
+            .uri(URI.create("http://tps:8080/transactions/")) // replace with environment
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .timeout(Duration.ofSeconds(10))
             .build()
