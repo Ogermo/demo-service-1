@@ -3,6 +3,8 @@ package com.itmo.microservices.demo.stock.api.service
 import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
 import com.itmo.microservices.demo.stock.api.event.*
+import com.itmo.microservices.demo.stock.impl.entity.StockItem
+import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
@@ -11,6 +13,9 @@ import javax.annotation.PostConstruct
 class StockEventListener {
     @Autowired
     private lateinit var stockService : StockItemService
+
+    @Autowired
+    private lateinit var stockItemRepository : StockItemRepository
 
     @Autowired
     private lateinit var eventBus : EventBus
@@ -38,6 +43,8 @@ class StockEventListener {
 
     @Subscribe
     fun onDeductItem(event : DeductItemEvent){
+        val item = stockItemRepository.findByTitle(event.title!!)
+        stockService.deductStockItem(item!!.id!!, event.number!!)
         println("Item " + event.title + " deducted by quantity " + event.number)
     }
 

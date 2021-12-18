@@ -20,6 +20,7 @@ import kotlin.random.Random
 import kong.unirest.Unirest
 import kong.unirest.json.JSONObject
 import com.itmo.microservices.demo.payment.impl.util.PaymentServiceMeta
+import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
 import java.lang.StringBuilder
 
 @Service
@@ -67,7 +68,7 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository,
             orderPayments = paymentRepository.findAll()
         }
         orderPayments.forEach {
-            logs.add(UserAccountFinancialLogRecordDto(FinancialOperationType.WITHDRAW, it.amount!!, it.orderId!!, it.transactionId!!, Random(0).nextLong()))
+            logs.add(UserAccountFinancialLogRecordDto(FinancialOperationType.WITHDRAW, it.amount!!, it.orderId!!, it.transactionId!!, it.closeTime!!))
         }
 
         return logs

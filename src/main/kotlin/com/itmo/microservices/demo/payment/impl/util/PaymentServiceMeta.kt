@@ -7,7 +7,7 @@ class PaymentServiceMeta {
     companion object {
 
         private fun getExternalServiceUrl() : String {
-            return "http://tps:8080"
+            return "http://77.234.215.138:30027"
         }
 
         fun makeTransactionUri() : String {

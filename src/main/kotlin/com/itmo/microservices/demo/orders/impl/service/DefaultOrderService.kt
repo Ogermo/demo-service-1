@@ -25,6 +25,7 @@ import com.itmo.microservices.demo.orders.impl.repository.OrderPaymentRepository
 import com.itmo.microservices.demo.orders.impl.util.toEntity
 import com.itmo.microservices.demo.orders.impl.util.toModel
 import com.itmo.microservices.demo.shoppingCartService.impl.service.DefaultCartService
+import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
 import com.itmo.microservices.demo.stock.api.event.ReserveItemEvent
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
@@ -163,5 +164,17 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     override fun getOrder(orderId: UUID): OrderDto {
         val order = orderRepository.findByIdOrNull(orderId) ?: return Order().toDto(mapOf())
         return order.toDto(orderItemsRepository.findByOrderId(orderId).map{it.itemId!! to it.amount!!}.toMap())
+    }
+
+    override fun requestDeductStockItems(orderId: UUID) {
+
+        val orderDto = getOrder(orderId)
+
+        orderDto.itemsMap.forEach {
+            val item = stockItemRepository.findByIdOrNull(it.key)
+            val amount = it.value.toInt()
+
+            eventBus.post(DeductItemEvent(item!!.title, amount))
+        }
     }
 }

@@ -6,6 +6,7 @@ import com.itmo.microservices.demo.delivery.api.model.Status
 import com.itmo.microservices.demo.orders.api.event.PaymentCreatedEvent
 import com.itmo.microservices.demo.orders.api.event.SlotReserveReponseEvent
 import com.itmo.microservices.demo.orders.api.service.OrderService
+import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
 import com.itmo.microservices.demo.stock.api.event.DeleteItemEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -32,6 +33,7 @@ class OrderEventListener {
 
     @Subscribe
     fun onPaymentCreated(event : PaymentCreatedEvent){
+        orderService.requestDeductStockItems(event.orderId)
         System.out.println("Response: " + event.status + " for order " + event.orderId + " transaction id " + event.transactionID)
     }
 

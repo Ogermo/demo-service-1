@@ -15,6 +15,7 @@ interface OrderService {
 //    fun getOrdersByUsername(user : UserDetails) : List<OrderModel>
 //    fun getOrder(orderId : UUID) : OrderModel
     fun book(orderId : UUID, user : UserDetails) : BookingDto
+    fun requestDeductStockItems(orderId: UUID)
 //    fun deleteOrder(orderId : UUID, user : UserDetails)
 //    fun assignPayment(orderId : UUID, payment : PaymentModel)
 }
