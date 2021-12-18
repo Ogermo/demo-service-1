@@ -44,7 +44,7 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
                 return false
             }
         }
-                stockItem.setReservedCount(number!!)
+                stockItem.addReservedCount(number!!)
 
         stockItemRepository.save(stockItem)
         eventBus.post(StockItemReservedEvent(stockItem.toModel()))
@@ -74,7 +74,7 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
 
     override fun addStockItem(stockItemId: UUID, number: Int) {
             val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return
-            stockItem.setAmount(number)
+            stockItem.addAmount(number)
             stockItemRepository.save(stockItem)
             eventBus.post(StockItemCreatedEvent(stockItem.toModel()))
             eventBus.post(AddedItemEvent(stockItem.title, number))
@@ -120,11 +120,11 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
                 return false
             }
         }
-        stockItem.setAmount(-number)
-        stockItem.setReservedCount(-number)
+        stockItem.removeAmount(number)
+        stockItem.removeReservedCount(number)
         stockItemRepository.save(stockItem)
         eventBus.post(StockItemCreatedEvent(stockItem.toModel()))
-        eventBus.post(DeductItemEvent(stockItem.title, number))
+        //eventBus.post(DeductItemEvent(stockItem.title, number))
         eventLogger.info(
             StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
             stockItem

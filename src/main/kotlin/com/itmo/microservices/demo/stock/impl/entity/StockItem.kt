@@ -42,12 +42,20 @@ class StockItem {
         "StockItem(id=$id, title=$title, description=$description, price=$price, amount=$amount, " +
                 "reservedCount=$reservedCount, category=$category)"
 
-    fun setReservedCount(number: Int) {
+    fun addReservedCount(number: Int) {
         this.reservedCount = reservedCount?.plus(number)
     }
 
-    fun setAmount(number: Int) {
+    fun removeReservedCount(number: Int) {
+        this.reservedCount = reservedCount?.minus(number)
+    }
+
+    fun addAmount(number: Int) {
         this.amount = amount?.plus(number)
+    }
+    
+    fun removeAmount(number: Int) {
+        this.amount = amount?.minus(number)
     }
 
 }
