@@ -10,14 +10,10 @@ import javax.servlet.http.HttpServletResponse
 
 class CustomInterceptor : HandlerInterceptor {
 
-    @InjectEventLogger
-    private lateinit var eventLogger: EventLogger
-
-
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
         var requestCacheWrapperObject = ContentCachingRequestWrapper(request)
         requestCacheWrapperObject.parameterMap
-        eventLogger.info(CommonNotableEvents.I_NEW_REQuEST,requestCacheWrapperObject.contentAsByteArray)
+        System.out.println(requestCacheWrapperObject)
         return true
     }
 }
