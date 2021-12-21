@@ -5,6 +5,7 @@ import java.util.*
 
 enum class UserServiceNotableEvents(private val template: String): NotableEvent {
     I_USER_CREATED("User created: {}"),
+    I_USER_REQUEST("Info: {}"),
     I_USER_DELETED("User deleted: {}");
 
     override fun getTemplate(): String {
