@@ -3,8 +3,11 @@ package com.itmo.microservices.demo.stock.api.service
 import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
 import com.itmo.microservices.demo.stock.api.event.*
-import com.itmo.microservices.demo.stock.impl.entity.StockItem
+import com.itmo.microservices.demo.stock.api.model.BookingLogRecordModel
+import com.itmo.microservices.demo.stock.impl.entity.BookingLogRecord
+import com.itmo.microservices.demo.stock.impl.repository.BookingRepository
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
+import com.itmo.microservices.demo.stock.impl.util.toModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
@@ -16,6 +19,9 @@ class StockEventListener {
 
     @Autowired
     private lateinit var stockItemRepository : StockItemRepository
+
+    @Autowired
+    private lateinit var bookingRepository : BookingRepository
 
     @Autowired
     private lateinit var eventBus : EventBus
@@ -45,5 +51,12 @@ class StockEventListener {
     @Subscribe
     fun onAddItem(event : AddedItemEvent){
         println("Item " + event.title + " added by quantity " + event.number)
+    }
+
+    @Subscribe
+    fun onBooking(event : BookingEvent){
+       val booking = BookingLogRecord(null, event.bookingId, event.itemId, event.status,
+       event.amount, event.timestamp)
+        bookingRepository.save(booking.toModel())
     }
 }

@@ -25,7 +25,9 @@ import com.itmo.microservices.demo.orders.impl.repository.OrderPaymentRepository
 import com.itmo.microservices.demo.orders.impl.util.toEntity
 import com.itmo.microservices.demo.orders.impl.util.toModel
 import com.itmo.microservices.demo.shoppingCartService.impl.service.DefaultCartService
+import com.itmo.microservices.demo.stock.api.event.BookingEvent
 import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
+import com.itmo.microservices.demo.stock.api.model.BookingStatus
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
 import com.itmo.microservices.demo.stock.impl.util.toModel
@@ -88,6 +90,9 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
                 if (Am != null) {
                     //StockService.reserveStockItem(item.key, item.value.toInt())
                     //eventBus.post(ReserveItemEvent(item.itemId!!, item.amount!!.toInt()))
+                        //TODO timestamp
+                    eventBus.post(BookingEvent(order.id, item.id, BookingStatus.SUCCESS,
+                        (item.amount)!!.toInt(), 0))
                 }
                 else{
 
