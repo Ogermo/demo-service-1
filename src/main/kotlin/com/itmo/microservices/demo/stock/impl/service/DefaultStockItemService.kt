@@ -35,26 +35,6 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
         stockItemRepository.findByIdOrNull(stockItemId)?.toModel()
             ?: throw NotFoundException("Stock Item $stockItemId not found")
 
-    //number can be negative
-    override fun reserveStockItem(stockItemId: UUID?, number: Int?) : Boolean {
-        val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return false
-        val totalCount = stockItem.amount
-        if (totalCount != null) {
-            if (totalCount < number!!) {
-                return false
-            }
-        }
-                stockItem.addReservedCount(number!!)
-
-        stockItemRepository.save(stockItem)
-        eventBus.post(StockItemReservedEvent(stockItem.toModel()))
-        eventLogger.info(
-            StockItemServiceNotableEvents.I_STOCK_ITEM_RESERVED,
-            stockItem
-        )
-        return true
-
-    }
 
     override fun createStockItem(stockItem: StockItemModel) : CatalogItemDto? {
         val title = stockItem.title;
@@ -121,7 +101,6 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
             }
         }
         stockItem.removeAmount(number)
-        stockItem.removeReservedCount(number)
         stockItemRepository.save(stockItem)
         eventBus.post(StockItemCreatedEvent(stockItem.toModel()))
         //eventBus.post(DeductItemEvent(stockItem.title, number))

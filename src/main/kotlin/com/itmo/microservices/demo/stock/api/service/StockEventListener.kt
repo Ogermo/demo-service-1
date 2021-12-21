@@ -36,12 +36,6 @@ class StockEventListener {
     }
 
     @Subscribe
-    fun onReserveItem(event : ReserveItemEvent){
-        stockService.reserveStockItem(event.id, event.number)
-        println("Item " + event.id + " reserved by quantity " + event.number)
-    }
-
-    @Subscribe
     fun onDeductItem(event : DeductItemEvent){
         val item = stockItemRepository.findByTitle(event.title!!)
         stockService.deductStockItem(item!!.id!!, event.number!!)

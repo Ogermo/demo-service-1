@@ -63,7 +63,7 @@ class StockItemController(private val stockItemService: StockItemService) {
         else return catalogItem
     }
 
-    @PutMapping("/items/{itemId}")
+ /*   @PutMapping("/items/{itemId}")
     @Operation(
         summary = "Change stock item",
         responses = [
@@ -74,7 +74,7 @@ class StockItemController(private val stockItemService: StockItemService) {
         security = [SecurityRequirement(name = "bearerAuth")])
     fun changeStockItem(@PathVariable itemId: UUID, @RequestBody stockItem: StockItemModel
     ) =
-        stockItemService.changeStockItem(itemId, stockItem)
+        stockItemService.changeStockItem(itemId, stockItem)*/
 
     @PutMapping("/items/{itemId}/add/{number}")
     @Operation(
@@ -89,22 +89,7 @@ class StockItemController(private val stockItemService: StockItemService) {
     fun addStockItem(@PathVariable itemId: UUID, @PathVariable number: Int) =
         stockItemService.addStockItem(itemId, number)
 
-    @PutMapping("/items/{itemId}/reserve/{number}")
-    @Operation(
-        summary = "Reserve stock item",
-        responses = [
-            ApiResponse(description = "OK", responseCode = "200"),
-            ApiResponse(description = "Bad request", responseCode = "400", content = [Content()]),
-            ApiResponse(description = "Unauthorized", responseCode = "403", content = [Content()]),
-            ApiResponse(description = "Incorrect input", responseCode = "405", content = [Content()])
-        ],
-        security = [SecurityRequirement(name = "bearerAuth")]
-    )
-    fun reserveStockItem(@PathVariable itemId: UUID, @PathVariable number: Int) {
-        if (!stockItemService.reserveStockItem(itemId, number)) {
-            throw HttpServerErrorException(HttpStatus.METHOD_NOT_ALLOWED, "Cannot reserve") //405
-        }
-    }
+
 
     @PutMapping("/items/{itemId}/deduct/{number}")
     @Operation(

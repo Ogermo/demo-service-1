@@ -1,6 +1,5 @@
 package com.itmo.microservices.demo.stock.impl.entity
 
-import com.itmo.microservices.demo.stock.api.model.Category
 import org.hibernate.annotations.GenericGenerator
 import org.hibernate.annotations.Type
 import java.util.*
@@ -16,13 +15,11 @@ class StockItem {
     var description: String? = ""
     var price: Int? = 100
     var amount: Int? = 0
-    var reservedCount: Int? = 0
-    var category: Category = Category.COMMON
 
     constructor()
 
     constructor(id: UUID? = null, title: String? = "", description: String? = "", price: Int? = 100,
-                amount: Int? = 0, reservedCount: Int? = 0, category: Category) {
+                amount: Int? = 0) {
         if (id == null){
             this.id = UUID.randomUUID()
         }
@@ -34,21 +31,10 @@ class StockItem {
         this.description = description
         this.price = price
         this.amount = amount
-        this.reservedCount = reservedCount
-        this.category = category
     }
 
     override fun toString(): String =
-        "StockItem(id=$id, title=$title, description=$description, price=$price, amount=$amount, " +
-                "reservedCount=$reservedCount, category=$category)"
-
-    fun addReservedCount(number: Int) {
-        this.reservedCount = reservedCount?.plus(number)
-    }
-
-    fun removeReservedCount(number: Int) {
-        this.reservedCount = reservedCount?.minus(number)
-    }
+        "StockItem(id=$id, title=$title, description=$description, price=$price, amount=$amount)"
 
     fun addAmount(number: Int) {
         this.amount = amount?.plus(number)

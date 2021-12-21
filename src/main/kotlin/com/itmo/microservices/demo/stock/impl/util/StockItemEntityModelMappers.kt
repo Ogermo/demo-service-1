@@ -9,9 +9,7 @@ fun StockItemModel.toEntity(): StockItem = StockItem(
     title = this.title,
     description = this.description,
     price = this.price,
-    amount = this.amount,
-    reservedCount = this.reservedCount,
-    category = this.category
+    amount = this.amount
 )
 
 fun StockItem.toDto(): CatalogItemDto = CatalogItemDto(
@@ -19,9 +17,7 @@ fun StockItem.toDto(): CatalogItemDto = CatalogItemDto(
     title = this.title!!,
     description = this.description!!,
     price = this.price!!,
-    amount = this.amount!!,
-    reservedCount = this.reservedCount,
-    category = this.category
+    amount = this.amount!!
 )
 
 fun StockItem.toModel(): StockItemModel = StockItemModel(
@@ -29,7 +25,5 @@ fun StockItem.toModel(): StockItemModel = StockItemModel(
     title = this.title!!,
     description = this.description!!,
     price = this.price!!,
-    amount = this.amount!!,
-    reservedCount = this.reservedCount,
-    category = this.category
+    amount = this.amount!!
 )

@@ -10,7 +10,5 @@ data class StockItemModel(
     val title: String,
     val description: String,
     val price: Int,
-    val amount: Int,
-    val reservedCount: Int?,
-    val category: Category = Category.COMMON
+    val amount: Int
 )
