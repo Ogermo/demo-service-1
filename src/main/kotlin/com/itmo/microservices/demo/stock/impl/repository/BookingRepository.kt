@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-interface BookingRepository : JpaRepository<BookingLogRecordModel, UUID> {
+interface BookingRepository : JpaRepository<BookingLogRecord, UUID> {
     @Query("From BookingLogRecord WHERE bookingId = ?1")
     fun findByBookingId(id: UUID) : List<BookingLogRecord>
 }

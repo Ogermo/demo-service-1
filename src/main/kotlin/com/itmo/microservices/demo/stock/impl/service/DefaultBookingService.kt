@@ -27,19 +27,19 @@ class DefaultBookingService(private val bookingRepository: BookingRepository,
         return bookingRepository.findByBookingId(id)
     }
 
-    override fun getBookingById(id: UUID): BookingLogRecordModel? {
+    override fun getBookingById(id: UUID): BookingLogRecord? {
         return bookingRepository.findByIdOrNull(id)
     }
 
     override fun createBooking(bookingModel: BookingLogRecordModel) : BookingLogRecordModel {
-            bookingRepository.save(bookingModel)
+            bookingRepository.save(bookingModel.toEntity())
             return bookingModel
     }
 
     override fun changeBookingStatus(id: UUID, status : BookingStatus) {
         val booking = bookingRepository.findByIdOrNull(id) ?: return
-        val bookingEntity = booking.toEntity()
-        bookingEntity.status = status
-        bookingRepository.save(bookingEntity.toModel())
+
+        booking.status = status
+        bookingRepository.save(booking)
     }
 }

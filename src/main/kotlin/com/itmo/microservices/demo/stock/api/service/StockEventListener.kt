@@ -57,6 +57,6 @@ class StockEventListener {
     fun onBooking(event : BookingEvent){
        val booking = BookingLogRecord(null, event.bookingId, event.itemId, event.status,
        event.amount, event.timestamp)
-        bookingRepository.save(booking.toModel())
+        bookingRepository.save(booking)
     }
 }
