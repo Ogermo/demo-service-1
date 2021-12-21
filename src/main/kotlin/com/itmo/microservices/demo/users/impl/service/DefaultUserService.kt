@@ -40,6 +40,10 @@ class DefaultUserService(private val userRepository: UserRepository,
         ?: throw NotFoundException("User $name not found")
 
     override fun registerUser(request: RegistrationRequest): UserDto {
+        System.out.println("IS SYSTEM OUt printlN GOOD?")
+        eventLogger.info(UserServiceNotableEvents.I_USER_REQUEST,request)
+        eventLogger.info(UserServiceNotableEvents.I_USER_CREATED,request)
+
         val user = userRepository.findByName(request.name)
         if (user != null)
         {

@@ -4,6 +4,7 @@ import com.itmo.microservices.commonlib.logging.NotableEvent
 
 enum class CommonNotableEvents(private val template: String): NotableEvent {
     I_EVENT_BUS_SENT_MESSAGE_SUCCESS("Event bus sent message: {}"),
+    I_NEW_REQuEST("Request: {}"),
     I_LISTENER_RECEIVED_MESSAGE("Received message: {}"),
     W_WARN_EVENT("Warn situation. Description: {}");
 
