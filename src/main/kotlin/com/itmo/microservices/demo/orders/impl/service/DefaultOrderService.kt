@@ -3,29 +3,45 @@ package com.itmo.microservices.demo.orders.impl.service
 import com.google.common.eventbus.EventBus
 import com.itmo.microservices.commonlib.annotations.InjectEventLogger
 import com.itmo.microservices.commonlib.logging.EventLogger
+import com.itmo.microservices.demo.common.exception.AccessDeniedException
+import com.itmo.microservices.demo.common.exception.NotFoundException
+import com.itmo.microservices.demo.orders.api.messaging.OrderCreatedEvent
+import com.itmo.microservices.demo.orders.api.messaging.OrderDeletedEvent
+import com.itmo.microservices.demo.orders.api.messaging.PaymentAssignedEvent
 import com.itmo.microservices.demo.orders.api.model.BookingDto
 import com.itmo.microservices.demo.orders.api.model.OrderDto
+import com.itmo.microservices.demo.orders.api.model.OrderModel
+import com.itmo.microservices.demo.orders.api.model.PaymentModel
 import com.itmo.microservices.demo.orders.api.service.OrderService
 import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.impl.entity.OrderItems
+import com.itmo.microservices.demo.orders.impl.logging.OrderServiceNotableEvents
 import com.itmo.microservices.demo.orders.impl.repository.OrderItemsRepository
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
 import com.itmo.microservices.demo.orders.impl.util.toDto
+import com.itmo.microservices.demo.orders.impl.repository.OrderPaymentRepository
+import com.itmo.microservices.demo.orders.impl.util.toEntity
+import com.itmo.microservices.demo.orders.impl.util.toModel
 import com.itmo.microservices.demo.shoppingCartService.impl.service.DefaultCartService
 import com.itmo.microservices.demo.stock.api.event.BookingEvent
 import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
 import com.itmo.microservices.demo.stock.api.model.BookingStatus
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
+import com.itmo.microservices.demo.stock.impl.util.toModel
 import com.itmo.microservices.demo.users.api.service.UserService
 import kong.unirest.HttpStatus
+import org.hibernate.service.spi.InjectService
+import org.aspectj.weaver.ast.Or
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.ResponseBody
 import java.util.*
+import javax.naming.OperationNotSupportedException
 
 @Suppress("UnstableApiUsage")
 @Service
@@ -72,6 +88,9 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 
                 var Am = stockItem.amount
                 if (Am != null) {
+                    //StockService.reserveStockItem(item.key, item.value.toInt())
+                    //eventBus.post(ReserveItemEvent(item.itemId!!, item.amount!!.toInt()))
+                        //TODO timestamp
                     eventBus.post(BookingEvent(order.id, item.id, BookingStatus.SUCCESS,
                         (item.amount)!!.toInt(), 0))
                 }
@@ -119,11 +138,11 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         return newOrder.toDto(mapOf())
     }
 
-    override fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Int): ResponseEntity<Nothing> {
+    override fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Long): ResponseEntity<Nothing> {
         orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         var itemList = orderItemsRepository.findByOrderId(orderId)
         for (x in itemList){
-            if(x.itemId!! == itemId){
+            if(x.itemId!!.equals(itemId)){
                 var currentAmount = x.amount ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
                 orderItemsRepository.save(OrderItems(x.id,orderId,itemId,currentAmount + amount))
                 CartService.putItemInCart(orderId, itemId, amount)

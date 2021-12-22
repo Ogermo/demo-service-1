@@ -10,7 +10,7 @@ import java.util.*
 
 interface OrderService {
     fun createOrder() : OrderDto
-    fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Int) : ResponseEntity<Nothing>
+    fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Long) : ResponseEntity<Nothing>
     fun getOrder(orderId: UUID) :OrderDto
 //    fun getOrdersByUsername(user : UserDetails) : List<OrderModel>
 //    fun getOrder(orderId : UUID) : OrderModel
