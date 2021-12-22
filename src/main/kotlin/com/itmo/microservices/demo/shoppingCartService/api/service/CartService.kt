@@ -10,6 +10,6 @@ interface CartService {
     fun getCart(cartId: UUID) : ShoppingCartDTO?
     fun getCatalogItem(catalogItemId: UUID) : CatalogItemDTO?
     fun makeCart(id: UUID)
-    fun putItemInCart(cartId: UUID, catalogItem: UUID, amount: Long)
+    fun putItemInCart(cartId: UUID, catalogItem: UUID, amount: Int)
     fun makeCatalogItem(productId: UUID, amount: Int) : CatalogItemDTO?
 }

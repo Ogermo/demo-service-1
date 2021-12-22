@@ -4,11 +4,11 @@ import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.impl.entity.PaymentLogRecord
 import java.util.*
 
-data class OrderDto (
+data class OrderDto(
     val id: UUID,
     val timeCreated: Long,
     val status: OrderStatus,
-    val itemsMap: Map<UUID, Long>,
+    val itemsMap: Map<UUID, Int>,
     val deliveryDuration: Int?,
     val paymentHistory: List<PaymentLogRecord>
 )

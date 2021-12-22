@@ -19,11 +19,11 @@ class OrderItems {
     var id : UUID = UUID.randomUUID()
     var orderId : UUID? = null
     var itemId : UUID? = null
-    var amount : Long? = null
+    var amount : Int? = null
 
     constructor()
 
-    constructor(id : UUID?,orderId : UUID, itemId : UUID, amount : Long){
+    constructor(id : UUID?,orderId : UUID, itemId : UUID, amount : Int){
         if (id != null){
             this.id = id
         } else {

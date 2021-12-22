@@ -59,7 +59,7 @@ class DefaultCartService(private val shoppingCartRepository: ShoppingCartReposit
         shoppingCartRepository.save(cart)
     }
 
-    override fun putItemInCart(cartId: UUID, catalogItemId: UUID, amount: Long) {
+    override fun putItemInCart(cartId: UUID, catalogItemId: UUID, amount: Int) {
         val shoppingCartDTO = getCart(cartId)
         val catalogItemDTO = getCatalogItem(catalogItemId)
 
