@@ -145,7 +145,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
             if(x.itemId!!.equals(itemId)){
                 var currentAmount = x.amount ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
                 orderItemsRepository.save(OrderItems(x.id,orderId,itemId,currentAmount + amount))
-                CartService.putItemInCart(orderId, itemId, amount)
+                //CartService.putItemInCart(orderId, itemId, amount)
                 return ResponseEntity.status(HttpStatus.OK).body(null)
             }
         }
