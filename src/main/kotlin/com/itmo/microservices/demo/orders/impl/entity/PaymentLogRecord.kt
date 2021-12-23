@@ -13,7 +13,7 @@ class PaymentLogRecord {
     var id : UUID = UUID.randomUUID()
     var timestamp: Long = 0
     var status: PaymentStatus = PaymentStatus.SUCCESS
-    var amount: Long = 0
+    var amount: Int = 0
     var transactionId: UUID = UUID.randomUUID()
 
 }

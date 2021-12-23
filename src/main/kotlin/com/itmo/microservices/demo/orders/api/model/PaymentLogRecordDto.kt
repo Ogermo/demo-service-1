@@ -6,6 +6,6 @@ import java.util.*
 data class PaymentLogRecordDto (
     val timestamp: Long,
     val status: PaymentStatus,
-    val amount: Long,
+    val amount: Int,
     val transactionId: UUID
 )

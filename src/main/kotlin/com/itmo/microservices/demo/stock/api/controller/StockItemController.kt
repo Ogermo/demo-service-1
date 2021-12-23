@@ -3,7 +3,6 @@ package com.itmo.microservices.demo.stock.api.controller
 import com.itmo.microservices.demo.stock.api.model.CatalogItemDto
 import com.itmo.microservices.demo.stock.api.model.StockItemModel
 import com.itmo.microservices.demo.stock.api.service.StockItemService
-import com.itmo.microservices.demo.tasks.api.model.TaskModel
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content

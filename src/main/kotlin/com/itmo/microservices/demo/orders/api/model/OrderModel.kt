@@ -6,7 +6,7 @@ import java.util.*
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class OrderModel (
     val id: UUID?,
-    val basketId: UUID?,
+    //val basketId: UUID?,
     val date: Date?,
     val userId: UUID?,
     val status : OrderStatus

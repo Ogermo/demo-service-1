@@ -22,7 +22,7 @@ import java.util.*
 //    userId = this.userId,
 //    status = this.status
 //)
-fun Order.toDto(itemsMap: Map<UUID, Long>) : OrderDto = OrderDto(
+fun Order.toDto(itemsMap: Map<UUID, Int>) : OrderDto = OrderDto(
     id = this.id,
     timeCreated = this.timeCreated,
     status = this.status,

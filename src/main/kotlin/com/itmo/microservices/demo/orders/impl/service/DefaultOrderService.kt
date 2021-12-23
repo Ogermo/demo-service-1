@@ -3,45 +3,29 @@ package com.itmo.microservices.demo.orders.impl.service
 import com.google.common.eventbus.EventBus
 import com.itmo.microservices.commonlib.annotations.InjectEventLogger
 import com.itmo.microservices.commonlib.logging.EventLogger
-import com.itmo.microservices.demo.common.exception.AccessDeniedException
-import com.itmo.microservices.demo.common.exception.NotFoundException
-import com.itmo.microservices.demo.orders.api.messaging.OrderCreatedEvent
-import com.itmo.microservices.demo.orders.api.messaging.OrderDeletedEvent
-import com.itmo.microservices.demo.orders.api.messaging.PaymentAssignedEvent
 import com.itmo.microservices.demo.orders.api.model.BookingDto
 import com.itmo.microservices.demo.orders.api.model.OrderDto
-import com.itmo.microservices.demo.orders.api.model.OrderModel
-import com.itmo.microservices.demo.orders.api.model.PaymentModel
 import com.itmo.microservices.demo.orders.api.service.OrderService
 import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.impl.entity.OrderItems
-import com.itmo.microservices.demo.orders.impl.logging.OrderServiceNotableEvents
 import com.itmo.microservices.demo.orders.impl.repository.OrderItemsRepository
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
 import com.itmo.microservices.demo.orders.impl.util.toDto
-import com.itmo.microservices.demo.orders.impl.repository.OrderPaymentRepository
-import com.itmo.microservices.demo.orders.impl.util.toEntity
-import com.itmo.microservices.demo.orders.impl.util.toModel
-import com.itmo.microservices.demo.shoppingCartService.impl.service.DefaultCartService
 import com.itmo.microservices.demo.stock.api.event.BookingEvent
 import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
 import com.itmo.microservices.demo.stock.api.model.BookingStatus
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
-import com.itmo.microservices.demo.stock.impl.util.toModel
 import com.itmo.microservices.demo.users.api.service.UserService
 import kong.unirest.HttpStatus
-import org.hibernate.service.spi.InjectService
-import org.aspectj.weaver.ast.Or
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseBody
 import java.util.*
-import javax.naming.OperationNotSupportedException
 
 @Suppress("UnstableApiUsage")
 @Service
@@ -49,7 +33,6 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
                           private val orderItemsRepository: OrderItemsRepository,
                           private val stockItemRepository: StockItemRepository,
                           private val StockService: StockItemService,
-                          private val CartService : DefaultCartService,
                           private val eventBus: EventBus,
                           private val userService: UserService) : OrderService {
 
@@ -73,7 +56,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 //    }
 //
     override fun book(orderId : UUID, user : UserDetails): BookingDto?{
-        CartService.booking(orderId);
+        //CartService.booking(orderId);
         var order = orderRepository.findByIdOrNull(orderId) ?: return Order().toBookingDto(setOf())
         if(order.status != OrderStatus.COLLECTING){
             return null
@@ -91,11 +74,8 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 
                 var Am = stockItem.amount
                 if (Am != null) {
-                    //StockService.reserveStockItem(item.key, item.value.toInt())
-                    //eventBus.post(ReserveItemEvent(item.itemId!!, item.amount!!.toInt()))
-                        //TODO timestamp
                     eventBus.post(BookingEvent(order.id, item.id, BookingStatus.SUCCESS,
-                        (item.amount)!!.toInt(), 0))
+                        (item.amount)!!.toInt(), System.currentTimeMillis()))
                 }
                 else{
 
@@ -137,11 +117,11 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     override fun createOrder() : OrderDto {
         val newOrder = Order()
         orderRepository.save(newOrder)
-        CartService.makeCart(newOrder.id)
+        //CartService.makeCart(newOrder.id)
         return newOrder.toDto(mapOf())
     }
 
-    override fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Long): ResponseEntity<Nothing> {
+    override fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Int): ResponseEntity<Nothing> {
         if(amount <= 0){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         }

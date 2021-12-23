@@ -15,8 +15,6 @@ import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
 import com.itmo.microservices.demo.orders.impl.util.toEntity
-import com.itmo.microservices.demo.shoppingCartService.api.model.ShoppingCartDTO
-import com.itmo.microservices.demo.shoppingCartService.api.service.CartService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -38,7 +36,6 @@ import kotlin.collections.HashMap
 @RestController
 class OrderController(private val orderService: OrderService,
                       private val orderRepository: OrderRepository,
-                      private val shoppingCartService: CartService,
                       private val deliveryService: DeliveryService,
                       private val eventBus: EventBus
 ) {
@@ -67,7 +64,7 @@ class OrderController(private val orderService: OrderService,
             ],
             security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun putItemsToCart(@PathVariable order_id : UUID, @PathVariable item_id : UUID, @RequestParam(value = "amount") amount : Long = 1, @AuthenticationPrincipal user : UserDetails) = orderService.putItemToOrder(order_id, item_id, amount)
+    fun putItemsToCart(@PathVariable order_id : UUID, @PathVariable item_id : UUID, @RequestParam(value = "amount") amount : Int = 1, @AuthenticationPrincipal user : UserDetails) = orderService.putItemToOrder(order_id, item_id, amount)
 
 
     @PostMapping("/orders/{order_id}/bookings")

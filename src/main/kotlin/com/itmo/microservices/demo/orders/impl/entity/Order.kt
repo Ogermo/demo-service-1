@@ -21,9 +21,9 @@ class Order {
 //        strategy = "org.hibernate.id.UUIDGenerator"
 //    )
     var id : UUID = UUID.randomUUID()
-    var timeCreated : Long = 0
+    var timeCreated : Long = System.currentTimeMillis()
     var status : OrderStatus = OrderStatus.COLLECTING
-    var basketId : UUID? = null
+    //var basketId : UUID? = null
     var userId : UUID = UUID.randomUUID()
     var deliveryDuration : Int? = null
 
