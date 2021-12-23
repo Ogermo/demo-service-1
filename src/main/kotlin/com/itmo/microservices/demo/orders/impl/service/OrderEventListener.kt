@@ -5,6 +5,7 @@ import com.google.common.eventbus.Subscribe
 import com.itmo.microservices.demo.delivery.api.model.Status
 import com.itmo.microservices.demo.orders.api.event.PaymentCreatedEvent
 import com.itmo.microservices.demo.orders.api.event.SlotReserveReponseEvent
+import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.api.service.OrderService
 import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
 import com.itmo.microservices.demo.stock.api.event.DeleteItemEvent
@@ -33,6 +34,7 @@ class OrderEventListener {
 
     @Subscribe
     fun onPaymentCreated(event : PaymentCreatedEvent){
+        orderService.changeStatus(event.orderId,OrderStatus.PAID)
         orderService.requestDeductStockItems(event.orderId)
         System.out.println("Response: " + event.status + " for order " + event.orderId + " transaction id " + event.transactionID)
     }

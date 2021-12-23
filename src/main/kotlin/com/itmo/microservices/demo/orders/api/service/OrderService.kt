@@ -1,14 +1,12 @@
 package com.itmo.microservices.demo.orders.api.service
 
-import com.itmo.microservices.demo.orders.api.model.BookingDto
-import com.itmo.microservices.demo.orders.api.model.OrderDto
-import com.itmo.microservices.demo.orders.api.model.OrderModel
-import com.itmo.microservices.demo.orders.api.model.PaymentModel
+import com.itmo.microservices.demo.orders.api.model.*
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.userdetails.UserDetails
 import java.util.*
 
 interface OrderService {
+    fun changeStatus(orderId: UUID,status: OrderStatus)
     fun createOrder() : OrderDto
     fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Int) : ResponseEntity<Nothing>
     fun getOrder(orderId: UUID) :OrderDto

@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseBody
+import java.lang.IllegalArgumentException
 import java.util.*
 
 @Suppress("UnstableApiUsage")
@@ -56,6 +57,12 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 //        return orderRepository.findByIdOrNull(orderId)?.toModel() ?: throw NotFoundException("Order $orderId not found")
 //    }
 //
+    override fun changeStatus(orderId: UUID,status: OrderStatus){
+    var order = orderRepository.findByIdOrNull(orderId) ?: throw IllegalArgumentException()
+    order.status = status
+    orderRepository.save(order)
+}
+
     override fun book(orderId : UUID, user : UserDetails): BookingDto?{
         //CartService.booking(orderId);
         var order = orderRepository.findByIdOrNull(orderId) ?: return Order().toBookingDto(setOf())
