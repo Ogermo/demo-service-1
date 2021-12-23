@@ -28,8 +28,12 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
 
-    override fun allStockItems(): List<CatalogItemDto> = stockItemRepository.findAll()
-        .map { it.toDto() }
+    override fun allStockItems(available : Boolean): List<CatalogItemDto> {
+        if(available) {
+            return stockItemRepository.findAvailableItems().map { it.toDto() }
+        }
+        else return stockItemRepository.findUnavailableItems().map { it.toDto() }
+    }
 
     override fun getStockItemById(stockItemId: UUID): StockItemModel =
         stockItemRepository.findByIdOrNull(stockItemId)?.toModel()

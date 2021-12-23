@@ -6,7 +6,7 @@ import com.itmo.microservices.demo.stock.impl.entity.StockItem
 import java.util.*
 
 interface StockItemService {
-    fun allStockItems(): List<CatalogItemDto>
+    fun allStockItems(available : Boolean): List<CatalogItemDto>
     fun createStockItem(stockItem: StockItemModel) : CatalogItemDto?
     fun getStockItemById(stockItemId: UUID) : StockItemModel
     fun addStockItem(stockItemId: UUID, number: Int)

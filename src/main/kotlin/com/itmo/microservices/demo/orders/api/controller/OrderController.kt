@@ -23,9 +23,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import kong.unirest.json.JSONObject
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.client.HttpServerErrorException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -79,7 +81,11 @@ class OrderController(private val orderService: OrderService,
             ],
             security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun book(@PathVariable order_id : UUID, @AuthenticationPrincipal user : UserDetails) = orderService.book(order_id, user)
+    fun book(@PathVariable order_id : UUID, @AuthenticationPrincipal user : UserDetails) {
+        if(orderService.book(order_id, user) == null){
+            throw HttpServerErrorException(HttpStatus.BAD_REQUEST, "Service error")
+        }
+    }
 
     @PostMapping("/orders/{order_id}/delivery")
     @Operation(

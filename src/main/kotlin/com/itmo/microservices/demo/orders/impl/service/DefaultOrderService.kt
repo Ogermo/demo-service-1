@@ -72,9 +72,12 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 //        return orderRepository.findByIdOrNull(orderId)?.toModel() ?: throw NotFoundException("Order $orderId not found")
 //    }
 //
-    override fun book(orderId : UUID, user : UserDetails): BookingDto{
+    override fun book(orderId : UUID, user : UserDetails): BookingDto?{
         CartService.booking(orderId);
         var order = orderRepository.findByIdOrNull(orderId) ?: return Order().toBookingDto(setOf())
+        if(order.status != OrderStatus.COLLECTING){
+            return null
+        }
         var failedItems = mutableSetOf<UUID>()
         var itemsMap = orderItemsRepository.findByOrderId(orderId)
         for (item in itemsMap){
@@ -139,7 +142,13 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     }
 
     override fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Long): ResponseEntity<Nothing> {
-        orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        if(amount <= 0){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        }
+        val order = orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        if(order.status != OrderStatus.COLLECTING){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        }
         var itemList = orderItemsRepository.findByOrderId(orderId)
         for (x in itemList){
             if(x.itemId!!.equals(itemId)){
@@ -173,7 +182,6 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     override fun requestDeductStockItems(orderId: UUID) {
 
         val orderDto = getOrder(orderId)
-
         orderDto.itemsMap.forEach {
             val item = stockItemRepository.findByIdOrNull(it.key)
             val amount = it.value.toInt()

@@ -29,7 +29,9 @@ class StockItemController(private val stockItemService: StockItemService) {
         ],
         security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun allStockItems(@RequestParam available : Boolean): List<CatalogItemDto> = stockItemService.allStockItems()
+    fun allStockItems(@RequestParam available : Boolean): List<CatalogItemDto> {
+        return stockItemService.allStockItems(available)
+    }
 
     @GetMapping("/items/{itemId}")
     @Operation(

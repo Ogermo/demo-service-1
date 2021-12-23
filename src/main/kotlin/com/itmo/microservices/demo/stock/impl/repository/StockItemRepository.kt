@@ -11,4 +11,10 @@ import java.util.*
 interface StockItemRepository : JpaRepository<StockItem, UUID> {
     @Query("From StockItem WHERE title = ?1")
     fun findByTitle(title: String) : StockItem?
+
+    @Query("From StockItem WHERE amount > 0")
+    fun findAvailableItems() : List<StockItem>
+
+    @Query("From StockItem WHERE amount = 0")
+    fun findUnavailableItems() : List<StockItem>
 }
