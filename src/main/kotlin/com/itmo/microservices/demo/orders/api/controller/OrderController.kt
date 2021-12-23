@@ -15,6 +15,7 @@ import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
 import com.itmo.microservices.demo.orders.impl.util.toEntity
+import com.itmo.microservices.demo.users.impl.repository.UserRepository
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -37,6 +38,7 @@ import kotlin.collections.HashMap
 class OrderController(private val orderService: OrderService,
                       private val orderRepository: OrderRepository,
                       private val deliveryService: DeliveryService,
+                      private val userRepository: UserRepository,
                       private val eventBus: EventBus
 ) {
 
@@ -51,7 +53,7 @@ class OrderController(private val orderService: OrderService,
             ],
             security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun createOrder(@AuthenticationPrincipal user: UserDetails) = orderService.createOrder()
+    fun createOrder(@AuthenticationPrincipal user: UserDetails) = orderService.createOrder(userRepository.findByName(user.username)!!.id!!)
 
     @PutMapping("/orders/{order_id}/items/{item_id}")
     @Operation(

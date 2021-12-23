@@ -20,7 +20,7 @@ class Order {
 //        name = "UUID",
 //        strategy = "org.hibernate.id.UUIDGenerator"
 //    )
-    var id : UUID = UUID.randomUUID()
+    var id : UUID? = null
     var timeCreated : Long = System.currentTimeMillis()
     var status : OrderStatus = OrderStatus.COLLECTING
     //var basketId : UUID? = null
@@ -30,11 +30,20 @@ class Order {
 
     constructor()
 
-    constructor(id : UUID, timeCreated : Long, status : OrderStatus, userId : UUID) {
-        this.id = id
+    constructor(id : UUID?, timeCreated : Long, status : OrderStatus, userId : UUID, deliveryDuration : Int? = null) {
+
+        if (id == null){
+            this.id = UUID.randomUUID()
+        }
+        else
+        {
+            this.id = id
+        }
+
         this.status = status
         this.userId = userId
         this.timeCreated = timeCreated
+        this.deliveryDuration = deliveryDuration
     }
 
 }

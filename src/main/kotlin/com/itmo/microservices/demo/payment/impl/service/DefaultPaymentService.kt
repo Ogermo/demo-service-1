@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus
 import com.itmo.microservices.commonlib.annotations.InjectEventLogger
 import com.itmo.microservices.commonlib.logging.EventLogger
 import com.itmo.microservices.demo.delivery.api.model.Status
+import com.itmo.microservices.demo.delivery.impl.service.DefaultDeliveryService
 import com.itmo.microservices.demo.orders.api.event.PaymentCreatedEvent
 import com.itmo.microservices.demo.orders.api.event.SlotReserveReponseEvent
 import com.itmo.microservices.demo.payment.api.model.PaymentSubmissionDto
@@ -21,6 +22,9 @@ import kong.unirest.Unirest
 import kong.unirest.json.JSONObject
 import com.itmo.microservices.demo.payment.impl.util.PaymentServiceMeta
 import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
+import java.lang.RuntimeException
 import java.lang.StringBuilder
 
 @Service
@@ -30,13 +34,30 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository,
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
 
+    @ResponseStatus(value = HttpStatus.SERVICE_UNAVAILABLE, reason = "unable to reach external service")
+    class UnableToReachExternalServiceException : RuntimeException()
+
     fun makeTransaction() : JSONObject {
         val url = PaymentServiceMeta.makeTransactionUri()
 
-        val response = Unirest.post(url)
+        var response = Unirest.post(url)
                 .header("Content-Type", "application/json;IEEE754Compatible=true")
                 .body("{\"clientSecret\": \"7d65037f-e9af-433e-8e3f-a3da77e019b1\"}")
                 .asJson()
+
+        var tries = 3
+
+        while(tries > 0) {
+            response = Unirest.post(url)
+                .header("Content-Type", "application/json;IEEE754Compatible=true")
+                .body("{\"clientSecret\": \"7d65037f-e9af-433e-8e3f-a3da77e019b1\"}")
+                .asJson()
+
+            if (response.status == 200)
+                break
+
+            tries--
+        }
 
         val json = response.body.`object`
 
@@ -54,7 +75,7 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository,
 
         eventLogger.error(PaymentServiceNotableEvents.I_MAKE_TRANSACTION_FAILURE, sb.toString())
 
-        return JSONObject()
+        throw UnableToReachExternalServiceException()
     }
 
     override fun getFinLog(orderId: UUID?): List<UserAccountFinancialLogRecordDto> {

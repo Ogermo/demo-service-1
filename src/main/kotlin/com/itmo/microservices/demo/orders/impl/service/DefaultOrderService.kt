@@ -13,6 +13,7 @@ import com.itmo.microservices.demo.orders.impl.repository.OrderItemsRepository
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
 import com.itmo.microservices.demo.orders.impl.util.toDto
+import com.itmo.microservices.demo.orders.impl.util.toEntity
 import com.itmo.microservices.demo.stock.api.event.BookingEvent
 import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
 import com.itmo.microservices.demo.stock.api.model.BookingStatus
@@ -25,7 +26,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
-import org.springframework.web.bind.annotation.ResponseBody
 import java.util.*
 
 @Suppress("UnstableApiUsage")
@@ -75,7 +75,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 
                 var Am = stockItem.amount
                 if (Am != null) {
-                    eventBus.post(BookingEvent(order.id, item.id, BookingStatus.SUCCESS,
+                    eventBus.post(BookingEvent(order.id!!, item.id, BookingStatus.SUCCESS,
                         (item.amount)!!.toInt(), System.currentTimeMillis()))
                 }
                 else{
@@ -116,8 +116,10 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 //    fun getUserIdByUserDetails(user : UserDetails) : UUID {
 //        return UUID.fromString("0-0-0-0-0")
 //    }
-    override fun createOrder() : OrderDto {
-        val newOrder = Order()
+    override fun createOrder(userId: UUID) : OrderDto {
+
+        val newOrder = Order(null, System.currentTimeMillis(), OrderStatus.COLLECTING, userId)
+
         orderRepository.save(newOrder)
         //CartService.makeCart(newOrder.id)
         return newOrder.toDto(mapOf())
@@ -170,5 +172,16 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 
             eventBus.post(DeductItemEvent(item!!.title, amount))
         }
+    }
+
+    override fun changeOrderStatus(orderId: UUID, status: OrderStatus) {
+
+        val orderDto = getOrder(orderId)
+
+        orderDto.status = OrderStatus.PAID
+
+        val order = orderRepository.findByIdOrNull(orderId)
+
+        orderRepository.save(orderDto.toEntity(order!!.userId))
     }
 }

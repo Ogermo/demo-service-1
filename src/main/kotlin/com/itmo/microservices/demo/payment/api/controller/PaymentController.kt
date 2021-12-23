@@ -30,7 +30,12 @@ class PaymentController(private val paymentService: PaymentService) {
             summary = "Make payment for order",
             responses = [
                 ApiResponse(description = "OK", responseCode = "200"),
-                ApiResponse(description = "Unauthorized", responseCode = "403", content = [Content()])
+                ApiResponse(description = "Unauthorized", responseCode = "403", content = [Content()]),
+                ApiResponse(
+                    description = "Service unavailable",
+                    responseCode = "503",
+                    content = [io.swagger.v3.oas.annotations.media.Content()]
+                )
             ],
             security = [SecurityRequirement(name = "bearerAuth")]
     )
