@@ -19,6 +19,7 @@ import com.itmo.microservices.demo.stock.api.model.BookingStatus
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
 import com.itmo.microservices.demo.users.api.service.UserService
+import javassist.NotFoundException
 import kong.unirest.HttpStatus
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.ResponseEntity
@@ -87,17 +88,18 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         orderRepository.save(order)
         return order.toBookingDto(failedItems)
     }
-//
-//    override fun deleteOrder(orderId: UUID, user : UserDetails) {
-//        val userId = getUserIdByUserDetails(user)
-//        var order = orderRepository.findByIdOrNull(orderId) ?: throw NotFoundException("Order $orderId not found")
-//        if(order.userId != userId)
-//            throw AccessDeniedException("Cannot delete order that was not created by you")
-//        eventBus.post(OrderDeletedEvent(order.toModel()))
-//        eventLogger.info(OrderServiceNotableEvents.I_ORDER_DELETED, order)
-//        order.status = 4
-//        orderRepository.save(order)
-//    }
+
+    override fun deleteOrder(orderId: UUID) : Boolean{
+        var order = orderRepository.findByIdOrNull(orderId) ?: throw NotFoundException("Order $orderId not found")
+        if(order.status != OrderStatus.COLLECTING){
+            return false
+        }
+        //eventBus.post(OrderDeletedEvent(order.toModel()))
+        //eventLogger.info(OrderServiceNotableEvents.I_ORDER_DELETED, order)
+        order.status = OrderStatus.DISCARD
+        orderRepository.save(order)
+        return true
+    }
 //
 //    override fun assignPayment(orderId: UUID, payment : PaymentModel) {
 //        var order = orderRepository.findByIdOrNull(orderId) ?: throw NotFoundException("Order $orderId not found")

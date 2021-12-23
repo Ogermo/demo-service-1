@@ -114,4 +114,23 @@ class OrderController(private val orderService: OrderService,
             security = [SecurityRequirement(name = "bearerAuth")]
         )
         fun getOrder(@PathVariable order_id: UUID) = orderService.getOrder(order_id)
+
+        @DeleteMapping("/orders/delete/{order_id}")
+        @Operation(
+            summary = "Deletes order",
+            responses = [
+                ApiResponse(description = "OK", responseCode = "200"),
+                ApiResponse(description = "Bad request", responseCode = "400", content = [Content()]),
+                ApiResponse(description = "Unauthorized", responseCode = "403", content = [Content()]),
+                ApiResponse(description = "Service error", responseCode = "500", content = [Content()])
+            ],
+            security = [SecurityRequirement(name = "bearerAuth")]
+        )
+        fun deleteOrder(@PathVariable order_id: UUID) {
+            if(orderService.deleteOrder(order_id)){
+                throw HttpServerErrorException(HttpStatus.BAD_REQUEST, "Service error")
+            }
+        }
+
+
     }
