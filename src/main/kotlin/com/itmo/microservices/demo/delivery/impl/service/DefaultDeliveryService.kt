@@ -19,6 +19,7 @@ import com.itmo.microservices.demo.delivery.impl.util.toEntity
 import com.itmo.microservices.demo.delivery.impl.util.toModel
 import com.itmo.microservices.demo.orders.api.event.SlotReserveReponseEvent
 import com.itmo.microservices.demo.orders.api.model.BookingDto
+import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
@@ -99,11 +100,17 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         return delivery
     }
 
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "cannot have a negative slot")
+    class InvalidSlotException : IllegalArgumentException()
+
     override fun reserveDeliverySlots(orderId: UUID, slotInSec: Int) : BookingDto {
         //access API, this transaction imitates sending reservation
+        if (slotInSec < 0){
+            throw InvalidSlotException()
+        }
         val json = transaction()
         var order = orderRepository.findByIdOrNull(orderId)
-        if (order == null){
+        if (order == null || !order.status.equals(OrderStatus.PAID)){
             eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.FAILURE))
             return Order().toBookingDto(setOf())
         }
@@ -111,7 +118,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         order.deliveryDuration = slotInSec
         orderRepository.save(order)
         eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.SUCCESS))
-        return order.toBookingDto(setOf())
+            return order.toBookingDto(setOf())
         //check if available and reserve
 //        if (deliveryRepository.findBySlot(slotInSec) == null){
 //            deliveryRepository.save(Delivery(deliveryId,null,slotInSec))

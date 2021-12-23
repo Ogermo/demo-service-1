@@ -8,7 +8,6 @@ import com.itmo.microservices.demo.orders.api.event.PaymentCreatedEvent
 import com.itmo.microservices.demo.orders.api.event.SlotReserveReponseEvent
 import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.api.service.OrderService
-import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
 import com.itmo.microservices.demo.stock.api.event.DeleteItemEvent
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,9 +19,6 @@ class OrderEventListener {
 
     @Autowired
     private lateinit var orderService: OrderService
-
-    @Autowired
-    private lateinit var orderRepository: OrderRepository
 
     @Autowired
     private lateinit var eventBus: EventBus
