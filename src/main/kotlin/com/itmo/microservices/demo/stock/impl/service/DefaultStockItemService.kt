@@ -17,7 +17,10 @@ import com.itmo.microservices.demo.stock.impl.util.toDto
 import com.itmo.microservices.demo.stock.impl.util.toEntity
 import com.itmo.microservices.demo.stock.impl.util.toModel
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.ResponseStatus
+import java.lang.RuntimeException
 import java.util.*
 
 @Suppress("UnstableApiUsage")
@@ -56,7 +59,11 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
         else return null
     }
 
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "number < 0")
+    class CannotSetNegativeCountException : RuntimeException()
     override fun addStockItem(stockItemId: UUID, number: Int) {
+            if (number < 0)
+                throw CannotSetNegativeCountException()
             val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return
             stockItem.addAmount(number)
             stockItemRepository.save(stockItem)
@@ -97,6 +104,8 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
     }
 
     override fun deductStockItem(stockItemId: UUID, number: Int) : Boolean {
+        if (number < 0 )
+            throw CannotSetNegativeCountException()
         val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return false
         val totalCount = stockItem.amount
         if (totalCount != null) {

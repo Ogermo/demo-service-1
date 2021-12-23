@@ -119,7 +119,8 @@ class StockItemController(private val stockItemService: StockItemService) {
                 description = "Unauthorized",
                 responseCode = "403",
                 content = [Content()]
-            )
+            ),
+            ApiResponse(description = "Bad request", responseCode = "400")
         ],
         security = [SecurityRequirement(name = "bearerAuth")]
     )
