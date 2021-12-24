@@ -27,6 +27,7 @@ import kong.unirest.Unirest
 import kong.unirest.json.JSONObject
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import java.lang.RuntimeException
@@ -47,6 +48,18 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
     private lateinit var eventLogger: EventLogger
 
     private var httpClient : HttpClient = HttpClient.newBuilder().executor(ExecutorsFactory.executor()).build()
+
+    @Scheduled(fixedRate = 60000)
+    override fun checkForRefund() {
+        var time = (System.currentTimeMillis() / 1000).toInt()
+        val orders = orderRepository.findInWindow((time - 61).toInt(), time.toInt())
+        for (order in orders){
+            if (order.status.equals(OrderStatus.SHIPPING)){
+                order.status = OrderStatus.REFUND
+                orderRepository.save(order)
+            }
+        }
+    }
 
     override fun getDelivery(deliveryId: UUID): DeliveryModel {
         return deliveryRepository.findByIdOrNull(deliveryId)?.toModel() ?: throw NotFoundException("Order $deliveryId not found")
@@ -128,7 +141,6 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
 //            throw IllegalArgumentException("Didn't found by Id or Slot already taken")
 //        }
     }
-
     fun transaction() : JSONObject{
         var tries = 0
         val values = mapOf("clientSecret" to "832bce51-8cd5-4fda-8cb2-dd605c48069e")

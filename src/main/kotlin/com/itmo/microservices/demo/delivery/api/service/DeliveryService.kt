@@ -7,6 +7,7 @@ import kong.unirest.json.JSONObject
 import java.util.*
 
 interface DeliveryService {
+    fun checkForRefund()
     fun getDelivery(deliveryId : UUID) : DeliveryModel
     fun getDeliveryByOrder(orderId : UUID) : List<DeliveryModel>
     fun addDelivery(delivery: DeliveryModel)
