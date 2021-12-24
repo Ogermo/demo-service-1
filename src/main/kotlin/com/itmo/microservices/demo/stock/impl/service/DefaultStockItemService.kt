@@ -44,6 +44,9 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
 
 
     override fun createStockItem(stockItem: StockItemModel) : CatalogItemDto? {
+        if(stockItem.amount < 0){
+            return null
+        }
         val title = stockItem.title;
         if (title?.let { stockItemRepository.findByTitle(it) } == null) {
             val entity  = stockItem.toEntity()
