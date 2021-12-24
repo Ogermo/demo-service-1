@@ -7,6 +7,8 @@ import com.itmo.microservices.demo.delivery.api.model.Status
 import com.itmo.microservices.demo.delivery.impl.service.DefaultDeliveryService
 import com.itmo.microservices.demo.orders.api.event.PaymentCreatedEvent
 import com.itmo.microservices.demo.orders.api.event.SlotReserveReponseEvent
+import com.itmo.microservices.demo.orders.api.model.OrderStatus
+import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.payment.api.model.PaymentSubmissionDto
 import com.itmo.microservices.demo.payment.api.model.UserAccountFinancialLogRecordDto
 import com.itmo.microservices.demo.payment.api.service.PaymentService
@@ -22,6 +24,7 @@ import kong.unirest.Unirest
 import kong.unirest.json.JSONObject
 import com.itmo.microservices.demo.payment.impl.util.PaymentServiceMeta
 import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
 import java.lang.RuntimeException
@@ -29,6 +32,7 @@ import java.lang.StringBuilder
 
 @Service
 class DefaultPaymentService(private val paymentRepository: PaymentRepository,
+                            private val orderRepository: OrderRepository,
                             private val eventBus: EventBus) : PaymentService {
 
     @InjectEventLogger
@@ -96,6 +100,14 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository,
     }
 
     override fun makePayment(orderId: UUID): PaymentSubmissionDto {
+
+        //order need to be booked
+        var order = orderRepository.findByIdOrNull(orderId) ?: throw IllegalArgumentException()
+        if (!order.status.equals(OrderStatus.BOOKED)){
+            eventBus.post(PaymentCreatedEvent(orderId,null, Status.FAILURE))
+            return PaymentSubmissionDto(0, UUID.fromString("0-0-0-0-0"))
+        }
+
 
         val transaction = makeTransaction()
 
