@@ -126,9 +126,6 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     }
 
     override fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Int): ResponseEntity<Nothing> {
-        if(amount <= 0){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
-        }
         val order = orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         if(order.status != OrderStatus.COLLECTING){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
@@ -137,6 +134,9 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         for (x in itemList){
             if(x.itemId!!.equals(itemId)){
                 var currentAmount = x.amount ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+                if (currentAmount + amount < 0){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+                }
                 orderItemsRepository.save(OrderItems(x.id,orderId,itemId,currentAmount + amount))
                 //CartService.putItemInCart(orderId, itemId, amount)
                 return ResponseEntity.status(HttpStatus.OK).body(null)
