@@ -110,15 +110,15 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         }
         val json = transaction()
         var order = orderRepository.findByIdOrNull(orderId)
-        if (order == null || !order.status.equals(OrderStatus.PAID)){
+        if (order == null || !(order.status.equals(OrderStatus.PAID) || order.status.equals((OrderStatus.REFUND)))){
             eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.FAILURE))
             return Order().toBookingDto(setOf())
         }
-        deliveryRepository.save(Delivery(orderId,null,slotInSec))
+        //deliveryRepository.save(Delivery(orderId,null,slotInSec))
         order.deliveryDuration = slotInSec
         orderRepository.save(order)
         eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.SUCCESS))
-            return order.toBookingDto(setOf())
+        return order.toBookingDto(setOf())
         //check if available and reserve
 //        if (deliveryRepository.findBySlot(slotInSec) == null){
 //            deliveryRepository.save(Delivery(deliveryId,null,slotInSec))
