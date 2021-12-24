@@ -126,6 +126,10 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     }
 
     override fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Int): ResponseEntity<Nothing> {
+        val item = stockItemRepository.findByIdOrNull(itemId)
+        if(item == null || item.amount!! < amount){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        }
         val order = orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         if(order.status != OrderStatus.COLLECTING){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
