@@ -116,6 +116,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         }
         //deliveryRepository.save(Delivery(orderId,null,slotInSec))
         order.deliveryDuration = slotInSec
+        order.status = OrderStatus.SHIPPING
         orderRepository.save(order)
         eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.SUCCESS))
         return order.toBookingDto(setOf())
