@@ -136,14 +136,23 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         if(order.status != OrderStatus.COLLECTING){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         }
+//        var itemList = orderItemsRepository.findByOrderId(orderId)
+//        for (x in itemList){
+//            if(x.itemId!!.equals(itemId)){
+//                var currentAmount = x.amount ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+//                if (currentAmount + amount < 0){
+//                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+//                }
+//                orderItemsRepository.save(OrderItems(x.id,orderId,itemId,currentAmount + amount))
+//                //CartService.putItemInCart(orderId, itemId, amount)
+//                return ResponseEntity.status(HttpStatus.OK).body(null)
+//            }
+//        }
+//        orderItemsRepository.save(OrderItems(null,orderId,itemId,amount))
         var itemList = orderItemsRepository.findByOrderId(orderId)
         for (x in itemList){
             if(x.itemId!!.equals(itemId)){
-                var currentAmount = x.amount ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
-                if (currentAmount + amount < 0){
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
-                }
-                orderItemsRepository.save(OrderItems(x.id,orderId,itemId,currentAmount + amount))
+                orderItemsRepository.save(OrderItems(x.id,orderId,itemId,amount))
                 //CartService.putItemInCart(orderId, itemId, amount)
                 return ResponseEntity.status(HttpStatus.OK).body(null)
             }
