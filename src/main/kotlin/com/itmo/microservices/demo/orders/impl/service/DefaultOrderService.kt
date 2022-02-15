@@ -9,6 +9,7 @@ import com.itmo.microservices.demo.orders.api.service.OrderService
 import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.impl.entity.OrderItems
+import com.itmo.microservices.demo.orders.impl.logging.OrderServiceNotableEvents
 import com.itmo.microservices.demo.orders.impl.repository.OrderItemsRepository
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
@@ -126,6 +127,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     }
 
     override fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Int): ResponseEntity<Nothing> {
+        eventLogger.info(OrderServiceNotableEvents.I_ORDER_ADDED, listOf(orderId,itemId,amount))
         val item = stockItemRepository.findByIdOrNull(itemId)
         if(item == null || item.amount!! < amount){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)

@@ -118,7 +118,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
 
     override fun reserveDeliverySlots(orderId: UUID, slotInSec: Int) : BookingDto {
         //access API, this transaction imitates sending reservation
-        if (slotInSec < 0){
+        if (slotInSec <= 0){
             throw InvalidSlotException()
         }
         val json = transaction()
