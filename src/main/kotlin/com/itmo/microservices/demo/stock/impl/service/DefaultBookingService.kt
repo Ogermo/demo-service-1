@@ -8,6 +8,7 @@ import com.itmo.microservices.demo.stock.api.model.BookingLogRecordModel
 import com.itmo.microservices.demo.stock.api.model.BookingStatus
 import com.itmo.microservices.demo.stock.api.service.BookingService
 import com.itmo.microservices.demo.stock.impl.entity.BookingLogRecord
+import com.itmo.microservices.demo.stock.impl.logging.StockItemServiceNotableEvents
 import com.itmo.microservices.demo.stock.impl.repository.BookingRepository
 import com.itmo.microservices.demo.stock.impl.util.toDto
 import com.itmo.microservices.demo.stock.impl.util.toEntity
@@ -24,6 +25,7 @@ class DefaultBookingService(private val bookingRepository: BookingRepository,
     private lateinit var eventLogger: EventLogger
 
     override fun getBookingsByBookingId(id: UUID): List<BookingLogRecord> {
+        eventLogger.info(StockItemServiceNotableEvents.I_CHECK_BOOKING,id)
         return bookingRepository.findByBookingId(id)
     }
 

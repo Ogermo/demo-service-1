@@ -5,7 +5,8 @@ import com.itmo.microservices.commonlib.logging.NotableEvent
 enum class StockItemServiceNotableEvents(private val template: String) : NotableEvent {
     I_STOCK_ITEM_CREATED("Stock Item created: {}"),
     I_STOCK_ITEM_CHANGED("Stock Item changed: {}"),
-    I_STOCK_ITEM_DELETED("Stock Item deleted: {}");
+    I_STOCK_ITEM_DELETED("Stock Item deleted: {}"),
+    I_CHECK_BOOKING("Checking booking: {}");
 
     override fun getTemplate(): String {
         return template

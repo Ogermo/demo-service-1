@@ -59,6 +59,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 //
     override fun book(orderId : UUID, user : UserDetails): BookingDto?{
         //CartService.booking(orderId);
+        eventLogger.info(OrderServiceNotableEvents.I_ORDER_BOOKED,orderId)
         var order = orderRepository.findByIdOrNull(orderId) ?: return Order().toBookingDto(setOf())
         if(order.status != OrderStatus.COLLECTING){
             return null
@@ -174,6 +175,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     }
 
     override fun getOrder(orderId: UUID): OrderDto {
+        eventLogger.info(OrderServiceNotableEvents.I_ORDER_CHECKED,orderId)
         val order = orderRepository.findByIdOrNull(orderId) ?: return Order().toDto(mapOf())
         return order.toDto(orderItemsRepository.findByOrderId(orderId).map{it.itemId!! to it.amount!!}.toMap())
     }
