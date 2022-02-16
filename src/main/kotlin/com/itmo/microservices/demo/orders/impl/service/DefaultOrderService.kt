@@ -77,7 +77,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 
                 var Am = stockItem.amount
                 if (Am != null) {
-                    eventBus.post(BookingEvent(order.id!!, item.id, BookingStatus.SUCCESS,
+                    eventBus.post(BookingEvent(order.id!!, item.itemId!!, BookingStatus.SUCCESS,
                         (item.amount)!!.toInt(), System.currentTimeMillis()))
                 }
                 else{
