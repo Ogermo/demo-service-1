@@ -80,10 +80,8 @@ class OrderController(private val orderService: OrderService,
             ],
             security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun book(@PathVariable order_id : UUID, @AuthenticationPrincipal user : UserDetails) {
-        if(orderService.book(order_id, user) == null){
-            throw HttpServerErrorException(HttpStatus.BAD_REQUEST, "Service error")
-        }
+    fun book(@PathVariable order_id : UUID, @AuthenticationPrincipal user : UserDetails): BookingDto {
+        return orderService.book(order_id,user) ?: throw HttpServerErrorException(HttpStatus.BAD_REQUEST, "Service error")
     }
 
     @PostMapping("/orders/{order_id}/delivery")
