@@ -24,18 +24,17 @@ class DefaultBookingService(private val bookingRepository: BookingRepository,
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
 
-    override fun getBookingsByBookingId(id: UUID): List<BookingLogRecord> {
+    override fun getBookingsByBookingId(id: UUID): List<BookingLogRecordModel> {
         eventLogger.info(StockItemServiceNotableEvents.I_CHECK_BOOKING,id)
-        return bookingRepository.findByBookingId(id)
+        val model : MutableList<BookingLogRecordModel> = mutableListOf()
+        for (record in bookingRepository.findByBookingId(id)){
+            model.add(record.toModel())
+        }
+        return model
     }
 
     override fun getBookingById(id: UUID): BookingLogRecord? {
         return bookingRepository.findByIdOrNull(id)
-    }
-
-    override fun createBooking(bookingModel: BookingLogRecordModel) : BookingLogRecordModel {
-            bookingRepository.save(bookingModel.toEntity())
-            return bookingModel
     }
 
     override fun changeBookingStatus(id: UUID, status : BookingStatus) {

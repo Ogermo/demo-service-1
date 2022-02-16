@@ -8,7 +8,6 @@ import javax.persistence.Table
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class BookingLogRecordModel(
-    val id: UUID?,
     val bookingId : UUID,
     val itemId : UUID,
     val status: BookingStatus,

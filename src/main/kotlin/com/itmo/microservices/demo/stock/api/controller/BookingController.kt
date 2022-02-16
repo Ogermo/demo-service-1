@@ -1,5 +1,6 @@
 package com.itmo.microservices.demo.stock.api.controller
 
+import com.itmo.microservices.demo.stock.api.model.BookingLogRecordModel
 import com.itmo.microservices.demo.stock.api.model.StockItemModel
 import com.itmo.microservices.demo.stock.api.service.BookingService
 import com.itmo.microservices.demo.stock.impl.entity.BookingLogRecord
@@ -27,7 +28,7 @@ class BookingController(private val bookingService: BookingService) {
         ],
         security = [SecurityRequirement(name = "bearerAuth")]
     )
-    fun getBookingsByBookingId(@PathVariable bookingId: UUID): List<BookingLogRecord> =
+    fun getBookingsByBookingId(@PathVariable bookingId: UUID): List<BookingLogRecordModel> =
         bookingService.getBookingsByBookingId(bookingId)
 
 }

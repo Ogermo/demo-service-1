@@ -9,8 +9,7 @@ import java.util.*
 
 interface BookingService {
     //TODO methods
-    fun createBooking(booking: BookingLogRecordModel) : BookingLogRecordModel?
     fun getBookingById(id: UUID) : BookingLogRecord?
-    fun getBookingsByBookingId(id: UUID) : List<BookingLogRecord>
+    fun getBookingsByBookingId(id: UUID) : List<BookingLogRecordModel>
     fun changeBookingStatus(id: UUID, status : BookingStatus)
 }

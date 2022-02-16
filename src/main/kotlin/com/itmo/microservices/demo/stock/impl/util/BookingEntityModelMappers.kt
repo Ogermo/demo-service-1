@@ -7,7 +7,6 @@ import com.itmo.microservices.demo.stock.impl.entity.BookingLogRecord
 import com.itmo.microservices.demo.stock.impl.entity.StockItem
 
 fun BookingLogRecordModel.toEntity(): BookingLogRecord = BookingLogRecord(
-    id = this.id,
     bookingId = this.bookingId,
     itemId = this.itemId,
     status = this.status,
@@ -16,7 +15,6 @@ fun BookingLogRecordModel.toEntity(): BookingLogRecord = BookingLogRecord(
 )
 
 fun BookingLogRecord.toModel(): BookingLogRecordModel = BookingLogRecordModel(
-    id = this.id,
     bookingId = this.bookingId,
     itemId = this.itemId,
     status = this.status,
