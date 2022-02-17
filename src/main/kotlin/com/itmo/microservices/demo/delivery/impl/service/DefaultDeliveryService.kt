@@ -97,6 +97,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
     class UnableToReachExternalServiceException : RuntimeException()
 
     override fun getDeliverySlots(number: Int): List<Int> {
+        eventLogger.info(DeliveryServiceNotableEvents.I_DELIVERY_CHECK,number)
         if (number <= 0) {
             throw InvalidNumberOfSlotsException()
         }
