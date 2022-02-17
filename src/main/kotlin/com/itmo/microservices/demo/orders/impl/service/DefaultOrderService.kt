@@ -121,7 +121,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     override fun createOrder(userId: UUID) : OrderDto {
 
         val newOrder = Order(null, System.currentTimeMillis(), OrderStatus.COLLECTING, userId)
-
+        eventLogger.info(OrderServiceNotableEvents.I_ORDER_CREATED,newOrder)
         orderRepository.save(newOrder)
         //CartService.makeCart(newOrder.id)
         return newOrder.toDto(mapOf())
