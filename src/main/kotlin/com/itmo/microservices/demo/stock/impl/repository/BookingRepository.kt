@@ -12,4 +12,7 @@ import java.util.*
 interface BookingRepository : JpaRepository<BookingLogRecord, UUID> {
     @Query("From BookingLogRecord WHERE bookingId = ?1")
     fun findByBookingId(id: UUID) : List<BookingLogRecord>
+
+    @Query("From BookingLogRecord WHERE bookingId = ?1 AND itemId = ?2")
+    fun findItem(bookingId : UUID, itemId : UUID) : BookingLogRecord
 }
