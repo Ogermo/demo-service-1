@@ -31,9 +31,11 @@ class DefaultBookingService(private val bookingRepository: BookingRepository,
     override fun getBookingsByBookingId(id: UUID): List<BookingLogRecordModel> {
         eventLogger.info(StockItemServiceNotableEvents.I_CHECK_BOOKING,id)
         val model : MutableList<BookingLogRecordModel> = mutableListOf()
-        val order = orderItemsRepository.findByOrderId(id).map{it.itemId!! to it.amount!!}.toMap() //now to order it according to this map
+        eventLogger.info(StockItemServiceNotableEvents.I_ORDER_QUERY,id)
+        val order = orderItemsRepository.findByOrderId(id) //now to order it according to this map
         for (record in order){
-            model.add(bookingRepository.findItem(id,record.key).toModel())
+            eventLogger.info(StockItemServiceNotableEvents.I_BOOKING_QUERY, listOf(id,record.itemId))
+            model.add(bookingRepository.findItem(id,record.itemId!!).toModel())
         }
         return model
     }
