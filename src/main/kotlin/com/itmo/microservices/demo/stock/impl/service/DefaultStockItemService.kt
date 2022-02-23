@@ -31,11 +31,13 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
     private lateinit var eventLogger: EventLogger
 
     val catalogShown: Counter = Counter.build()
-        .name("catalog_shown").help("Catalog shown.")
+        .name("catalog_shown_total").help("Catalog shown.")
         .labelNames("serviceName").register()
 
+
+
     override fun allStockItems(available : Boolean): List<CatalogItemDto> {
-        catalogShown.labels("p04").inc();
+        catalogShown.labels("p04").inc()
         if(available) {
             return stockItemRepository.findAvailableItems().map { it.toDto() }
         }
