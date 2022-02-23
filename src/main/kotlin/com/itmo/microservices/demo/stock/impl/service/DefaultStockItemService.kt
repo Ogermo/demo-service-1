@@ -7,7 +7,6 @@ import com.itmo.microservices.demo.common.exception.NotFoundException
 import com.itmo.microservices.demo.stock.api.event.*
 import com.itmo.microservices.demo.stock.api.messaging.StockItemCreatedEvent
 import com.itmo.microservices.demo.stock.api.messaging.StockItemDeletedEvent
-import com.itmo.microservices.demo.stock.api.messaging.StockItemReservedEvent
 import com.itmo.microservices.demo.stock.api.model.CatalogItemDto
 import com.itmo.microservices.demo.stock.api.model.StockItemModel
 import com.itmo.microservices.demo.stock.api.service.StockItemService
@@ -16,11 +15,11 @@ import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
 import com.itmo.microservices.demo.stock.impl.util.toDto
 import com.itmo.microservices.demo.stock.impl.util.toEntity
 import com.itmo.microservices.demo.stock.impl.util.toModel
+import io.prometheus.client.Counter
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
-import java.lang.RuntimeException
 import java.util.*
 
 @Suppress("UnstableApiUsage")
@@ -31,7 +30,12 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
 
+    val catalogShown: Counter = Counter.build()
+        .name("catalog_shown").help("Catalog shown.")
+        .labelNames("serviceName").register()
+
     override fun allStockItems(available : Boolean): List<CatalogItemDto> {
+        catalogShown.labels("p04").inc();
         if(available) {
             return stockItemRepository.findAvailableItems().map { it.toDto() }
         }
@@ -65,17 +69,17 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
     @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "number < 0")
     class CannotSetNegativeCountException : RuntimeException()
     override fun addStockItem(stockItemId: UUID, number: Int) {
-            if (number < 0)
-                throw CannotSetNegativeCountException()
-            val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return
-            stockItem.addAmount(number)
-            stockItemRepository.save(stockItem)
-            eventBus.post(StockItemCreatedEvent(stockItem.toModel()))
-            eventBus.post(AddedItemEvent(stockItem.title, number))
-            eventLogger.info(
-                StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
-                stockItem
-            )
+        if (number < 0)
+            throw CannotSetNegativeCountException()
+        val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return
+        stockItem.addAmount(number)
+        stockItemRepository.save(stockItem)
+        eventBus.post(StockItemCreatedEvent(stockItem.toModel()))
+        eventBus.post(AddedItemEvent(stockItem.title, number))
+        eventLogger.info(
+            StockItemServiceNotableEvents.I_STOCK_ITEM_CHANGED,
+            stockItem
+        )
 
     }
 
@@ -96,14 +100,14 @@ class DefaultStockItemService(private val stockItemRepository: StockItemReposito
     }
 
     override fun deleteStockItemById(stockItemId: UUID) {
-            val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return
-            stockItemRepository.deleteById(stockItemId)
-            eventBus.post(StockItemDeletedEvent(stockItem.toModel()))
+        val stockItem = stockItemRepository.findByIdOrNull(stockItemId) ?: return
+        stockItemRepository.deleteById(stockItemId)
+        eventBus.post(StockItemDeletedEvent(stockItem.toModel()))
         eventBus.post(DeleteItemEvent(stockItem.title))
-            eventLogger.info(
-                StockItemServiceNotableEvents.I_STOCK_ITEM_DELETED,
-                stockItem
-            )
+        eventLogger.info(
+            StockItemServiceNotableEvents.I_STOCK_ITEM_DELETED,
+            stockItem
+        )
     }
 
     override fun deductStockItem(stockItemId: UUID, number: Int) : Boolean {
