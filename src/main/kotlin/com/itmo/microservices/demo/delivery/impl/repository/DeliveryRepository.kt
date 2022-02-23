@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-interface DeliveryRepository : JpaRepository<Delivery, UUID>, JpaSpecificationExecutor<Delivery> {
+        interface DeliveryRepository : JpaRepository<Delivery, UUID>, JpaSpecificationExecutor<Delivery> {
 
     @Query("FROM Delivery WHERE orderId = ?1")
     fun findByOrderId(orderId: UUID): List<Delivery>
