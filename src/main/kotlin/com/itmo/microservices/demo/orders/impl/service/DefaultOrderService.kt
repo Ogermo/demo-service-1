@@ -21,6 +21,7 @@ import com.itmo.microservices.demo.stock.api.model.BookingStatus
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
 import com.itmo.microservices.demo.users.api.service.UserService
+import io.prometheus.client.Counter
 import javassist.NotFoundException
 import kong.unirest.HttpStatus
 import org.springframework.data.repository.findByIdOrNull
@@ -90,8 +91,12 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         orderRepository.save(order)
         return order.toBookingDto(failedItems)
     }
+    val discarded_orders: Counter = Counter.build()
+        .name("discarded_orders").help("Removed Ordered")
+        .labelNames("serviceName").register()
 
     override fun deleteOrder(orderId: UUID) : Boolean{
+        discarded_orders.labels("service-304").inc()
         var order = orderRepository.findByIdOrNull(orderId) ?: throw NotFoundException("Order $orderId not found")
         if(order.status != OrderStatus.COLLECTING){
             return false
@@ -191,8 +196,12 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         }
     }
 
-    override fun changeOrderStatus(orderId: UUID, status: OrderStatus) {
+    val order_status_changed: Counter = Counter.build()
+        .name("order_status_changed").help("Changed  order status")
+        .labelNames("serviceName").register()
 
+    override fun changeOrderStatus(orderId: UUID, status: OrderStatus) {
+        order_status_changed.labels("service-304").inc()
         val orderDto = getOrder(orderId)
 
         orderDto.status = OrderStatus.PAID
