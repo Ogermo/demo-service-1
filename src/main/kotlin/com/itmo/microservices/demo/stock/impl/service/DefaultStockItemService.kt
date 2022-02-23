@@ -15,29 +15,32 @@ import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
 import com.itmo.microservices.demo.stock.impl.util.toDto
 import com.itmo.microservices.demo.stock.impl.util.toEntity
 import com.itmo.microservices.demo.stock.impl.util.toModel
-import io.prometheus.client.Counter
+import io.micrometer.core.instrument.Counter
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
 import java.util.*
+import io.micrometer.core.instrument.MeterRegistry;
 
 @Suppress("UnstableApiUsage")
 @Service
 class DefaultStockItemService(private val stockItemRepository: StockItemRepository,
-                              private val eventBus: EventBus) : StockItemService{
+                              private val eventBus: EventBus,
+                              private val meterRegistry: MeterRegistry) : StockItemService{
 
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
 
-    val catalogShown: Counter = Counter.build()
-        .name("catalog_shown_total").help("Catalog shown.")
-        .labelNames("serviceName").register()
+    val catalogShown: Counter = Counter.builder("catalog_shown")    // 2 - create a counter using the fluent API
+        .tag("serviceName","p04")
+        .description("Catalog shown.")
+        .register(meterRegistry)
 
 
 
     override fun allStockItems(available : Boolean): List<CatalogItemDto> {
-        catalogShown.labels("p04").inc()
+        catalogShown.increment()
         if(available) {
             return stockItemRepository.findAvailableItems().map { it.toDto() }
         }
