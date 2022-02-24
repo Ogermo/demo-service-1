@@ -223,34 +223,32 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
             }
             catch (ex: ExecutionException)
             {
-                meterRegistry.summary("external_request_delivery","serviceName","p04",
-                    "httpCode","408",
-                    "isTimeout",true.toString(),
-                    "accountType","Transaction").record((System.nanoTime() - requestTimer).toDouble())
+                DistributionSummary.builder("external_request_delivery")
+                    .tags("serviceName","p04",
+                        "httpCode","408",
+                        "isTimeout",true.toString(),
+                        "accountType","Transaction")
+                    .publishPercentiles(0.75,0.9).register(meterRegistry)
+                    .record((System.nanoTime() - requestTimer).toDouble())
                 Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
                 continue
             }
-            if (response.statusCode() != 200){
-                //wait
-                meterRegistry.summary("external_request_delivery","serviceName","p04",
+            DistributionSummary.builder("external_request_delivery")
+                .tags("serviceName","p04",
                     "httpCode",response.statusCode().toString(),
                     "isTimeout",false.toString(),
-                    "accountType","Transaction").record((System.nanoTime() - requestTimer).toDouble())
+                    "accountType","Transaction")
+                .publishPercentiles(0.75,0.9).register(meterRegistry)
+                .record((System.nanoTime() - requestTimer).toDouble())
+            if (response.statusCode() != 200){
+                //wait
                 Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
                 continue
             }
             var json = JSONObject(response.body())
             if (json.get("status").equals("SUCCESS")){
-                meterRegistry.summary("external_request_delivery","serviceName","p04",
-                "httpCode",response.statusCode().toString(),
-                "isTimeout",false.toString(),
-                "accountType","Transaction").record((System.nanoTime() - requestTimer).toDouble())
                 return json
             }
-            meterRegistry.summary("external_request_delivery","serviceName","p04",
-                "httpCode",response.statusCode().toString(),
-                "isTimeout",false.toString(),
-                "accountType","Transaction").record((System.nanoTime() - requestTimer).toDouble())
             Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
         }
     }
