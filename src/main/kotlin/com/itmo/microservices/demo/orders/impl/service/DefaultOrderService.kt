@@ -21,6 +21,7 @@ import com.itmo.microservices.demo.stock.api.model.BookingStatus
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
 import com.itmo.microservices.demo.users.api.service.UserService
+import io.micrometer.core.instrument.Counter.builder
 import io.micrometer.core.instrument.MeterRegistry
 import io.prometheus.client.Counter
 import javassist.NotFoundException
@@ -44,13 +45,14 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
 
-    val itemAdded: Counter = Counter.build()
+    /*val itemAdded: Counter = Counter.build()
         .name("item_added").help("Added item.")
         .labelNames("serviceName").register()
 
-    val orderCreated: Counter = Counter.build()
-        .name("order_created").help("Order created.")
-        .labelNames("serviceName").register()
+    val orderCreated: Counter = Counter.builder("order_created")
+        .tag("serviceName", "p04")
+        .description("Order created.")
+        .register(meterRegistry)
 
     val itemBookRequest: Counter = Counter.build()
         .name("item_book_request").help("Item book request.")
@@ -58,7 +60,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 
     val finalizationAttempt: Counter = Counter.build()
         .name("finalization_attempt").help("Finalization attempt.")
-        .labelNames("serviceName", "result").register()
+        .labelNames("serviceName", "result").register()*/
 //    override fun getOrdersByUsername(user: UserDetails): List<OrderModel> {
 //        val userId = getUserIdByUserDetails(user)
 //        val orders = orderRepository.findAll()
@@ -87,21 +89,29 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         for (item in itemsMap){
             var stockItem = stockItemRepository.findByIdOrNull(item.itemId)
             if (stockItem == null){
-                itemBookRequest.labels("p04", "FAILED").inc()
+                meterRegistry.counter("item_book_request","serviceName","p04",
+                    "result", "FAILED").increment()
+                //itemBookRequest.labels("p04", "FAILED").inc()
                 failedItems.add(item.itemId!!)
             } else if (stockItem.amount!! < item.amount!!){
-                itemBookRequest.labels("p04", "FAILED").inc()
+                //itemBookRequest.labels("p04", "FAILED").inc()
+                meterRegistry.counter("item_book_request","serviceName","p04",
+                    "result", "FAILED").increment()
                 failedItems.add(item.itemId!!)
             } else{
 
                 var Am = stockItem.amount
                 if (Am != null) {
-                    itemBookRequest.labels("p04", "SUCCESS").inc()
+                    //itemBookRequest.labels("p04", "SUCCESS").inc()
+                    meterRegistry.counter("item_book_request","serviceName","p04",
+                        "result", "SUCCESS").increment()
                     eventBus.post(BookingEvent(order.id!!, item.itemId!!, BookingStatus.SUCCESS,
                         (item.amount)!!.toInt(), System.currentTimeMillis()))
                 }
                 else{
-                    itemBookRequest.labels("p04", "FAILED").inc()
+                    //itemBookRequest.labels("p04", "FAILED").inc()
+                    meterRegistry.counter("item_book_request","serviceName","p04",
+                        "result", "FAILED").increment()
                     failedItems.add(item.itemId!!)
                 }
             }
@@ -110,7 +120,9 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         "fromState",order.status.toString(),
         "toState",OrderStatus.BOOKED.toString()).increment()
         order.status = OrderStatus.BOOKED
-        finalizationAttempt.labels("p04", "SUCCESS").inc()
+        //finalizationAttempt.labels("p04", "SUCCESS").inc()
+        meterRegistry.counter("finalization_attempt","serviceName","p04",
+            "result", "SUCCESS").increment()
         orderRepository.save(order)
         return order.toBookingDto(failedItems)
     }
@@ -150,7 +162,8 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 //        return UUID.fromString("0-0-0-0-0")
 //    }
     override fun createOrder(userId: UUID) : OrderDto {
-        orderCreated.labels("p04").inc()
+        //orderCreated.labels("p04").inc()
+        meterRegistry.counter("order_created","serviceName","p04").increment()
         val newOrder = Order(null, System.currentTimeMillis(), OrderStatus.COLLECTING, userId)
         eventLogger.info(OrderServiceNotableEvents.I_ORDER_CREATED,newOrder)
         orderRepository.save(newOrder)
@@ -169,7 +182,8 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         if(order.status != OrderStatus.COLLECTING){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         }
-        itemAdded.labels("p04").inc()
+        //itemAdded.labels("p04").inc()
+        meterRegistry.counter("item_added","serviceName","p04").increment()
 //        var itemList = orderItemsRepository.findByOrderId(orderId)
 //        for (x in itemList){
 //            if(x.itemId!!.equals(itemId)){
