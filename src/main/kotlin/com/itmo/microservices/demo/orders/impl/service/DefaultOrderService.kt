@@ -108,7 +108,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         }
     meterRegistry.counter("order_status_changed","serviceName","p04",
         "fromState",order.status.toString(),
-        "toState",OrderStatus.BOOKED.toString())
+        "toState",OrderStatus.BOOKED.toString()).increment()
         order.status = OrderStatus.BOOKED
         finalizationAttempt.labels("p04", "SUCCESS").inc()
         orderRepository.save(order)
@@ -128,7 +128,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         //eventLogger.info(OrderServiceNotableEvents.I_ORDER_DELETED, order)
         meterRegistry.counter("order_status_changed","serviceName","p04",
             "fromState",order.status.toString(),
-            "toState",OrderStatus.DISCARD.toString())
+            "toState",OrderStatus.DISCARD.toString()).increment()
         order.status = OrderStatus.DISCARD
         orderRepository.save(order)
         return true
@@ -230,7 +230,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 
         meterRegistry.counter("order_status_changed","serviceName","p04",
             "fromState",orderDto.status.toString(),
-            "toState",OrderStatus.PAID.toString())
+            "toState",OrderStatus.PAID.toString()).increment()
 
         orderDto.status = OrderStatus.PAID
 

@@ -62,11 +62,6 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         .description("Amount of orders failed to deliver because of the wrong selected time")
         .register(meterRegistry)
 
-    val externalRequestAmount: DistributionSummary = DistributionSummary.builder("external_request_delivery")
-        .description("Amount of requests to external service for delivery")
-        .tag("serviceName","p04")
-        .register(meterRegistry)
-
     @Scheduled(fixedRate = 60000)
     override fun checkForRefund() {
         var time = (System.currentTimeMillis() / 1000).toInt()
@@ -75,7 +70,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
             if (order.status.equals(OrderStatus.SHIPPING)){
                 meterRegistry.counter("order_status_changed","serviceName","p04",
                     "fromState",order.status.toString(),
-                    "toState",OrderStatus.REFUND.toString())
+                    "toState",OrderStatus.REFUND.toString()).increment()
                 order.status = OrderStatus.REFUND
                 expiredDelivery.increment()
                 orderRepository.save(order)
@@ -152,10 +147,10 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         }
         //deliveryRepository.save(Delivery(orderId,null,slotInSec))
         order.deliveryDuration = slotInSec
-        if ((System.currentTimeMillis() / 1000).toInt() < order.deliveryDuration!!){
+        if ((System.currentTimeMillis() / 1000).toInt() > order.deliveryDuration!!){
             meterRegistry.counter("order_status_changed","serviceName","p04",
                 "fromState",order.status.toString(),
-            "toState",OrderStatus.REFUND.toString())
+            "toState",OrderStatus.REFUND.toString()).increment()
             order.status = OrderStatus.REFUND
             orderRepository.save(order)
             meterRegistry.counter("refuned_due_to_wrong_time_prediction_order","serviceName","p04","accountId",order.userId.toString())
@@ -166,7 +161,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         }
         meterRegistry.counter("order_status_changed","serviceName","p04",
             "fromState",order.status.toString(),
-            "toState",OrderStatus.SHIPPING.toString())
+            "toState",OrderStatus.SHIPPING.toString()).increment()
         order.status = OrderStatus.SHIPPING
         orderRepository.save(order)
         eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.SUCCESS))
