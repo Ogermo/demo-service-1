@@ -126,12 +126,15 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         orderRepository.save(order)
         return order.toBookingDto(failedItems)
     }
-    val discarded_orders: Counter = Counter.build()
-        .name("discarded_orders").help("Removed Ordered")
-        .labelNames("serviceName").register()
+
+
+    val discarded_orders: io.micrometer.core.instrument.Counter = io.micrometer.core.instrument.Counter.builder("discarded_orders")
+        .tag("serviceName", "p04")
+        .description("Discarded orders")
+        .register(meterRegistry)
 
     override fun deleteOrder(orderId: UUID) : Boolean{
-        discarded_orders.labels("service-304").inc()
+
         var order = orderRepository.findByIdOrNull(orderId) ?: throw NotFoundException("Order $orderId not found")
         if(order.status != OrderStatus.COLLECTING){
             return false
@@ -143,6 +146,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
             "toState",OrderStatus.DISCARD.toString()).increment()
         order.status = OrderStatus.DISCARD
         orderRepository.save(order)
+        discarded_orders.increment()
         return true
     }
 //

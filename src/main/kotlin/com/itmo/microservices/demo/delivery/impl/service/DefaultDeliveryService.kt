@@ -62,6 +62,21 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         .description("Amount of orders failed to deliver because of the wrong selected time")
         .register(meterRegistry)
 
+    val timeslot_set_request_count: Counter = Counter.builder("timeslot_set_request_count")
+    .tag("serviceName", "p04")
+    .description("Set timeslots")
+    .register(meterRegistry)
+
+    val shipping_orders_total: Counter = Counter.builder("shipping_orders_total")
+        .tag("serviceName", "p04")
+        .description(" Total shipping orders")
+        .register(meterRegistry)
+
+    val current_shipping_orders: Counter = Counter.builder("current_shipping_orders")
+        .tag("serviceName", "p04")
+        .description("Current shipping orders")
+        .register(meterRegistry)
+
     @Scheduled(fixedRate = 60000)
     override fun checkForRefund() {
         var time = (System.currentTimeMillis() / 1000).toInt()
@@ -74,6 +89,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
                 order.status = OrderStatus.REFUND
                 expiredDelivery.increment()
                 orderRepository.save(order)
+                shipping_orders_total.increment()
             }
         }
     }
@@ -88,6 +104,8 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
 
 
     override fun addDelivery(delivery: DeliveryModel) {
+        timeslot_set_request_count.increment()
+        current_shipping_orders.increment()
         deliveryRepository.save(delivery.toEntity())
         eventBus.post(DeliveryCreatedEvent(delivery))
         eventLogger.info(DeliveryServiceNotableEvents.I_DELIVERY_CREATED, delivery.toEntity())
@@ -112,6 +130,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
 
     @ResponseStatus(value = HttpStatus.SERVICE_UNAVAILABLE, reason = "unable to reach external service")
     class UnableToReachExternalServiceException : RuntimeException()
+
 
     override fun getDeliverySlots(number: Int): List<Int> {
         eventLogger.info(DeliveryServiceNotableEvents.I_DELIVERY_CHECK,number)
@@ -152,6 +171,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
                 "fromState",order.status.toString(),
             "toState",OrderStatus.REFUND.toString()).increment()
             order.status = OrderStatus.REFUND
+            shipping_orders_total.increment()
             orderRepository.save(order)
             meterRegistry.counter("refuned_due_to_wrong_time_prediction_order","serviceName","p04","accountId",order.userId.toString())
                 .increment()
@@ -164,6 +184,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
             "toState",OrderStatus.SHIPPING.toString()).increment()
         order.status = OrderStatus.SHIPPING
         orderRepository.save(order)
+        shipping_orders_total.increment()
         eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.SUCCESS))
         return order.toBookingDto(setOf())
         //check if available and reserve
