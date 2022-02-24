@@ -23,6 +23,9 @@ import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.DistributionSummary
+import io.micrometer.core.instrument.MeterRegistry
 import kong.unirest.Unirest
 import kong.unirest.json.JSONObject
 import org.springframework.data.repository.findByIdOrNull
@@ -42,12 +45,27 @@ import java.util.concurrent.ExecutionException
 @Service
 class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
                              private val eventBus: EventBus,
-                             private val orderRepository: OrderRepository) : DeliveryService {
+                             private val orderRepository: OrderRepository,  private val meterRegistry: MeterRegistry) : DeliveryService {
 
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
 
     private var httpClient : HttpClient = HttpClient.newBuilder().executor(ExecutorsFactory.executor()).build()
+
+    val expiredDelivery : Counter = Counter.builder("expired_delivery_order")
+        .tag("serviceName","p04")
+        .description("Amount of orders failed to deliver because of failure of delivery service")
+        .register(meterRegistry)
+
+    val wrongTime : Counter = Counter.builder("refuned_due_to_wrong_time_prediction_order")
+        .tag("serviceName","p04")
+        .description("Amount of orders failed to deliver because of the wrong selected time")
+        .register(meterRegistry)
+
+    val externalRequestAmount: DistributionSummary = DistributionSummary.builder("external_request_delivery")
+        .description("Amount of requests to external service for delivery")
+        .tag("serviceName","p04")
+        .register(meterRegistry)
 
     @Scheduled(fixedRate = 60000)
     override fun checkForRefund() {
@@ -55,7 +73,11 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         val orders = orderRepository.findInWindow((time - 61).toInt(), time.toInt())
         for (order in orders){
             if (order.status.equals(OrderStatus.SHIPPING)){
+                meterRegistry.counter("order_status_changed","serviceName","p04",
+                    "fromState",order.status.toString(),
+                    "toState",OrderStatus.REFUND.toString())
                 order.status = OrderStatus.REFUND
+                expiredDelivery.increment()
                 orderRepository.save(order)
             }
         }
@@ -130,6 +152,21 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         }
         //deliveryRepository.save(Delivery(orderId,null,slotInSec))
         order.deliveryDuration = slotInSec
+        if ((System.currentTimeMillis() / 1000).toInt() < order.deliveryDuration!!){
+            meterRegistry.counter("order_status_changed","serviceName","p04",
+                "fromState",order.status.toString(),
+            "toState",OrderStatus.REFUND.toString())
+            order.status = OrderStatus.REFUND
+            orderRepository.save(order)
+            meterRegistry.counter("refuned_due_to_wrong_time_prediction_order","serviceName","p04","accountId",order.userId.toString())
+                .increment()
+            wrongTime.increment()
+            eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.FAILURE))
+            return Order().toBookingDto(setOf())
+        }
+        meterRegistry.counter("order_status_changed","serviceName","p04",
+            "fromState",order.status.toString(),
+            "toState",OrderStatus.SHIPPING.toString())
         order.status = OrderStatus.SHIPPING
         orderRepository.save(order)
         eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.SUCCESS))
@@ -156,6 +193,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
 
 
         while(true){
+            val requestTimer = System.nanoTime()
             tries++
             if (tries == 6) throw UnableToReachExternalServiceException()
             var future = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -169,18 +207,34 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
             }
             catch (ex: ExecutionException)
             {
+                meterRegistry.summary("external_request_delivery","serviceName","p04",
+                    "httpCode","408",
+                    "isTimeout",true.toString(),
+                    "accountType","Transaction").record((System.nanoTime() - requestTimer).toDouble())
                 Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
                 continue
             }
             if (response.statusCode() != 200){
                 //wait
+                meterRegistry.summary("external_request_delivery","serviceName","p04",
+                    "httpCode",response.statusCode().toString(),
+                    "isTimeout",false.toString(),
+                    "accountType","Transaction").record((System.nanoTime() - requestTimer).toDouble())
                 Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
                 continue
             }
             var json = JSONObject(response.body())
             if (json.get("status").equals("SUCCESS")){
+                meterRegistry.summary("external_request_delivery","serviceName","p04",
+                "httpCode",response.statusCode().toString(),
+                "isTimeout",false.toString(),
+                "accountType","Transaction").record((System.nanoTime() - requestTimer).toDouble())
                 return json
             }
+            meterRegistry.summary("external_request_delivery","serviceName","p04",
+                "httpCode",response.statusCode().toString(),
+                "isTimeout",false.toString(),
+                "accountType","Transaction").record((System.nanoTime() - requestTimer).toDouble())
             Thread.sleep(Math.pow(2.0,tries.toDouble()).toLong() * 500)
         }
     }

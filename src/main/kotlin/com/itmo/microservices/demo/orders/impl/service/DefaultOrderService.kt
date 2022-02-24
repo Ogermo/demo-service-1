@@ -21,6 +21,7 @@ import com.itmo.microservices.demo.stock.api.model.BookingStatus
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
 import com.itmo.microservices.demo.users.api.service.UserService
+import io.micrometer.core.instrument.MeterRegistry
 import io.prometheus.client.Counter
 import javassist.NotFoundException
 import kong.unirest.HttpStatus
@@ -37,7 +38,8 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
                           private val stockItemRepository: StockItemRepository,
                           private val StockService: StockItemService,
                           private val eventBus: EventBus,
-                          private val userService: UserService) : OrderService {
+                          private val userService: UserService,
+                          private val meterRegistry: MeterRegistry) : OrderService {
 
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
@@ -104,6 +106,9 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
                 }
             }
         }
+    meterRegistry.counter("order_status_changed","serviceName","p04",
+        "fromState",order.status.toString(),
+        "toState",OrderStatus.BOOKED.toString())
         order.status = OrderStatus.BOOKED
         finalizationAttempt.labels("p04", "SUCCESS").inc()
         orderRepository.save(order)
@@ -121,6 +126,9 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         }
         //eventBus.post(OrderDeletedEvent(order.toModel()))
         //eventLogger.info(OrderServiceNotableEvents.I_ORDER_DELETED, order)
+        meterRegistry.counter("order_status_changed","serviceName","p04",
+            "fromState",order.status.toString(),
+            "toState",OrderStatus.DISCARD.toString())
         order.status = OrderStatus.DISCARD
         orderRepository.save(order)
         return true
@@ -216,13 +224,13 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         }
     }
 
-    val order_status_changed: Counter = Counter.build()
-        .name("order_status_changed").help("Changed  order status")
-        .labelNames("serviceName").register()
 
     override fun changeOrderStatus(orderId: UUID, status: OrderStatus) {
-        order_status_changed.labels("service-304").inc()
         val orderDto = getOrder(orderId)
+
+        meterRegistry.counter("order_status_changed","serviceName","p04",
+            "fromState",orderDto.status.toString(),
+            "toState",OrderStatus.PAID.toString())
 
         orderDto.status = OrderStatus.PAID
 
