@@ -14,5 +14,5 @@ interface BookingRepository : JpaRepository<BookingLogRecord, UUID> {
     fun findByBookingId(id: UUID) : List<BookingLogRecord>
 
     @Query("From BookingLogRecord WHERE bookingId = ?1 AND itemId = ?2")
-    fun findItem(bookingId : UUID, itemId : UUID) : BookingLogRecord
+    fun findItem(bookingId : UUID, itemId : UUID) : BookingLogRecord?
 }

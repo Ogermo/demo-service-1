@@ -35,7 +35,18 @@ class DefaultBookingService(private val bookingRepository: BookingRepository,
         val order = orderItemsRepository.findByOrderId(id) //now to order it according to this map
         for (record in order){
             eventLogger.info(StockItemServiceNotableEvents.I_BOOKING_QUERY, listOf(id,record.itemId))
-            model.add(bookingRepository.findItem(id,record.itemId!!).toModel())
+            var logRecord : BookingLogRecord? = null
+            for (i in 0..3){
+                logRecord = bookingRepository.findItem(id,record.itemId!!)
+                if (logRecord == null){
+                    Thread.sleep(500)
+                    continue
+                }
+                break
+            }
+            if (logRecord != null){
+                model.add(logRecord!!.toModel())
+            }
         }
         return model
     }
