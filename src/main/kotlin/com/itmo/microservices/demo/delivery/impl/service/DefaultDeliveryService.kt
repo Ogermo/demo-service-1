@@ -186,6 +186,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         orderRepository.save(order)
         shipping_orders_total.increment()
         eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.SUCCESS))
+        Thread.sleep(500)
         return order.toBookingDto(setOf())
         //check if available and reserve
 //        if (deliveryRepository.findBySlot(slotInSec) == null){
