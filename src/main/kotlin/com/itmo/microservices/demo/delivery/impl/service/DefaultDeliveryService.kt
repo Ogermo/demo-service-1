@@ -160,24 +160,24 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         }
         val json = transaction()
         var order = orderRepository.findByIdOrNull(orderId)
-        if (order == null || !(order.status.equals(OrderStatus.PAID) || order.status.equals((OrderStatus.REFUND)))){
-            eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.FAILURE))
-            return Order().toBookingDto(setOf())
-        }
+//        if (order == null || !(order.status.equals(OrderStatus.PAID) || order.status.equals((OrderStatus.REFUND)))){
+//            eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.FAILURE))
+//            return Order().toBookingDto(setOf())
+//        }
         //deliveryRepository.save(Delivery(orderId,null,slotInSec))
-        order.deliveryDuration = slotInSec
+        order!!.deliveryDuration = slotInSec
         if ((System.currentTimeMillis() / 1000).toInt() > order.deliveryDuration!!){
-            meterRegistry.counter("order_status_changed","serviceName","p04",
-                "fromState",order.status.toString(),
-            "toState",OrderStatus.REFUND.toString()).increment()
-            order.status = OrderStatus.REFUND
-            shipping_orders_total.increment()
-            orderRepository.save(order)
+//            meterRegistry.counter("order_status_changed","serviceName","p04",
+//                "fromState",order.status.toString(),
+//            "toState",OrderStatus.REFUND.toString()).increment()
+//            order.status = OrderStatus.REFUND
+//            shipping_orders_total.increment()
+//            orderRepository.save(order)
             meterRegistry.counter("refuned_due_to_wrong_time_prediction_order","serviceName","p04","accountId",order.userId.toString())
                 .increment()
-            wrongTime.increment()
-            eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.FAILURE))
-            return Order().toBookingDto(setOf())
+//            wrongTime.increment()
+//            eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.FAILURE))
+//            return Order().toBookingDto(setOf())
         }
         meterRegistry.counter("order_status_changed","serviceName","p04",
             "fromState",order.status.toString(),
