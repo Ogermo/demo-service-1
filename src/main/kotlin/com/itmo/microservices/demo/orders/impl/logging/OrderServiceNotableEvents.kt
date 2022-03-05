@@ -8,6 +8,7 @@ enum class OrderServiceNotableEvents(private val template: String) : NotableEven
     I_PAYMENT_ASSIGNED("Payment assigned: {}"),
     I_ORDER_ADDED("Added item: {}"),
     I_ORDER_CHECKED("Checking order: {}"),
+    I_ORDER_DESCRIPTION("Order: {}"),
     I_ORDER_BOOKED("Booking order: {}");
 
     override fun getTemplate(): String {

@@ -228,6 +228,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     override fun getOrder(orderId: UUID): OrderDto {
         eventLogger.info(OrderServiceNotableEvents.I_ORDER_CHECKED,orderId)
         val order = orderRepository.findByIdOrNull(orderId) ?: return Order().toDto(mapOf())
+        eventLogger.info(OrderServiceNotableEvents.I_ORDER_DESCRIPTION,order.toDto(mapOf()))
         return order.toDto(orderItemsRepository.findByOrderId(orderId).map{it.itemId!! to it.amount!!}.toMap())
     }
 
