@@ -165,8 +165,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
 //            return Order().toBookingDto(setOf())
 //        }
         //deliveryRepository.save(Delivery(orderId,null,slotInSec))
-        order!!.deliveryDuration = slotInSec
-        if ((System.currentTimeMillis() / 1000).toInt() > order.deliveryDuration!!){
+        if ((System.currentTimeMillis() / 1000).toInt() > order!!.deliveryDuration!!){
 //            meterRegistry.counter("order_status_changed","serviceName","p04",
 //                "fromState",order.status.toString(),
 //            "toState",OrderStatus.REFUND.toString()).increment()
@@ -180,10 +179,10 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
 //            return Order().toBookingDto(setOf())
         }
         meterRegistry.counter("order_status_changed","serviceName","p04",
-            "fromState",order.status.toString(),
+            "fromState",order!!.status.toString(),
             "toState",OrderStatus.SHIPPING.toString()).increment()
         order.status = OrderStatus.SHIPPING
-        orderRepository.saveAndFlush(order)
+        orderRepository.updateDeliveryDuration(orderId,slotInSec)
         shipping_orders_total.increment()
         eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.SUCCESS))
         return order.toBookingDto(setOf())
