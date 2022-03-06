@@ -10,5 +10,5 @@ data class OrderDto (
     var status: OrderStatus,
     val itemsMap: Map<UUID, Int>,
     val deliveryDuration: Int?,
-    val paymentHistory: List<PaymentLogRecord>
+    val paymentHistory: List<PaymentLogRecordDto>
 )

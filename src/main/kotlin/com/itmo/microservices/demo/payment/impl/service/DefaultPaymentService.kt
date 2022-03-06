@@ -49,7 +49,7 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository,
                 .body("{\"clientSecret\": \"7d65037f-e9af-433e-8e3f-a3da77e019b1\"}")
                 .asJson()
 
-        var tries = 3
+        var tries = 5
 
         while(tries > 0) {
             response = Unirest.post(url)
@@ -58,7 +58,9 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository,
                 .asJson()
 
             if (response.status == 200)
-                break
+                if (response.body.`object`.get("status").toString().equals("SUCCESS")){
+                    break
+                }
 
             tries--
         }
@@ -66,7 +68,9 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository,
         val json = response.body.`object`
 
         if (response.status == 200) {
-            return json
+            if (json.get("status").toString().equals("SUCCESS")){
+                return json
+            }
         }
 
         val sb = StringBuilder()

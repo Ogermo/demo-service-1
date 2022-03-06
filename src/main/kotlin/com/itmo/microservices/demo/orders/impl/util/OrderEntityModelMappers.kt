@@ -2,10 +2,8 @@ package com.itmo.microservices.demo.orders.impl.util
 
 import com.itmo.microservices.demo.orders.api.model.BookingDto
 import com.itmo.microservices.demo.orders.api.model.OrderDto
-import com.itmo.microservices.demo.orders.api.model.OrderModel
-import com.itmo.microservices.demo.orders.api.model.OrderStatus
+import com.itmo.microservices.demo.orders.api.model.PaymentLogRecordDto
 import com.itmo.microservices.demo.orders.impl.entity.Order
-import com.itmo.microservices.demo.stock.impl.entity.StockItem
 import java.util.*
 
 fun OrderDto.toEntity(userId: UUID) = Order(
@@ -30,6 +28,14 @@ fun Order.toDto(itemsMap: Map<UUID, Int>) : OrderDto = OrderDto(
     itemsMap = itemsMap,
     deliveryDuration = this.deliveryDuration,
     paymentHistory = listOf()
+)
+fun Order.toDto(itemsMap: Map<UUID, Int>,paymentHistory: List<PaymentLogRecordDto>) : OrderDto = OrderDto(
+    id = this.id!!,
+    timeCreated = this.timeCreated,
+    status = this.status,
+    itemsMap = itemsMap,
+    deliveryDuration = this.deliveryDuration,
+    paymentHistory = paymentHistory
 )
 fun Order.toBookingDto(failed : Set<UUID>) : BookingDto = BookingDto(
     id = this.id!!,

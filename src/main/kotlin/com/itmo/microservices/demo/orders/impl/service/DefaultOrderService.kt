@@ -15,6 +15,8 @@ import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
 import com.itmo.microservices.demo.orders.impl.util.toDto
 import com.itmo.microservices.demo.orders.impl.util.toEntity
+import com.itmo.microservices.demo.payment.impl.repository.PaymentRepository
+import com.itmo.microservices.demo.payment.impl.util.toDto
 import com.itmo.microservices.demo.stock.api.event.BookingEvent
 import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
 import com.itmo.microservices.demo.stock.api.model.BookingStatus
@@ -37,6 +39,7 @@ import java.util.*
 class DefaultOrderService(private val orderRepository: OrderRepository,
                           private val orderItemsRepository: OrderItemsRepository,
                           private val stockItemRepository: StockItemRepository,
+                          private val paymentRepository: PaymentRepository,
                           private val StockService: StockItemService,
                           private val eventBus: EventBus,
                           private val userService: UserService,
@@ -230,7 +233,8 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
         eventLogger.info(OrderServiceNotableEvents.I_ORDER_CHECKED,orderId)
         val order = orderRepository.findByIdOrNull(orderId) ?: return Order().toDto(mapOf())
         eventLogger.info(OrderServiceNotableEvents.I_ORDER_DESCRIPTION,order.toDto(mapOf()))
-        return order.toDto(orderItemsRepository.findByOrderId(orderId).map{it.itemId!! to it.amount!!}.toMap())
+        return order.toDto(orderItemsRepository.findByOrderId(orderId).map{it.itemId!! to it.amount!!}.toMap(),
+        paymentRepository.findByOrderId(orderId).toDto())
     }
 
     override fun requestDeductStockItems(orderId: UUID) {
