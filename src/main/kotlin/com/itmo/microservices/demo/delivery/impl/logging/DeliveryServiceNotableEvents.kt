@@ -6,6 +6,7 @@ enum class DeliveryServiceNotableEvents(private val template: String) : NotableE
     I_DELIVERY_CREATED("Delivery created: {}"),
     I_DELIVERY_CHECK("Checking slots: {}"),
     I_DELIVERY_DELETED("Delivery deleted: {}"),
+    I_SLOT_ASSIGNED("Slot chosen for id: {}"),
     I_DELIVERY_DELIVERED("Delivery delivered: {}");
 
     override fun getTemplate(): String {

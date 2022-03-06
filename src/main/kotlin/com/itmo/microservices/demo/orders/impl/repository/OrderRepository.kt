@@ -18,7 +18,7 @@ interface OrderRepository : JpaRepository<Order, UUID> {
     fun findInWindow(start: Int, end: Int): List<Order>
 
     @Transactional
-    @Modifying
+    @Modifying(flushAutomatically = true)
     @Query("UPDATE orders SET delivery_duration = :deliveryDuration WHERE id = :id",
     nativeQuery = true)
     fun updateDeliveryDuration(@Param("id") id: UUID, @Param("deliveryDuration") deliveryDuration: Int?)

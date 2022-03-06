@@ -158,7 +158,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         if (slotInSec <= 0){
             throw InvalidSlotException()
         }
-        val json = transaction()
+        //val json = transaction()
         var order = orderRepository.findByIdOrNull(orderId)
 //        if (order == null || !(order.status.equals(OrderStatus.PAID) || order.status.equals((OrderStatus.REFUND)))){
 //            eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.FAILURE))
@@ -184,6 +184,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         order.status = OrderStatus.SHIPPING
         orderRepository.updateDeliveryDuration(orderId,slotInSec)
         shipping_orders_total.increment()
+        eventLogger.info(DeliveryServiceNotableEvents.I_SLOT_ASSIGNED, listOf(orderId,slotInSec))
         eventBus.post(SlotReserveReponseEvent(orderId,slotInSec,Status.SUCCESS))
         return order.toBookingDto(setOf())
         //check if available and reserve
