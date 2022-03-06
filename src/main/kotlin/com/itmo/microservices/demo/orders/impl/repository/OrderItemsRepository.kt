@@ -17,7 +17,7 @@ interface OrderItemsRepository : JpaRepository<OrderItems, UUID>, JpaSpecificati
 
     @Transactional
     @Modifying(flushAutomatically = true)
-    @Query("DELETE FROM OrderItems WHERE orderId = ?1"
+    @Query("DELETE FROM order_items WHERE order_id = ?1"
         ,nativeQuery = true)
     fun deleteByOrderId(OrderId: UUID)
 }
