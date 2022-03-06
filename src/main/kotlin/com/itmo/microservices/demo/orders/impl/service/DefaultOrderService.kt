@@ -226,6 +226,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     }
 
     override fun getOrder(orderId: UUID): OrderDto {
+        Thread.sleep(300) //DELETE ME LATER
         eventLogger.info(OrderServiceNotableEvents.I_ORDER_CHECKED,orderId)
         val order = orderRepository.findByIdOrNull(orderId) ?: return Order().toDto(mapOf())
         eventLogger.info(OrderServiceNotableEvents.I_ORDER_DESCRIPTION,order.toDto(mapOf()))
