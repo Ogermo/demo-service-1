@@ -186,6 +186,12 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         }
         val order = orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        if(order.status == OrderStatus.BOOKED){
+            //unbook it
+            order.status == OrderStatus.COLLECTING
+            orderRepository.save(order)
+            orderItemsRepository.deleteByOrderId(order.id!!)
+        }
         if(order.status != OrderStatus.COLLECTING){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         }
