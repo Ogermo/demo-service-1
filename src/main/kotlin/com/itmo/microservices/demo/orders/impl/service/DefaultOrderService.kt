@@ -255,7 +255,7 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     }
 
 
-    override fun changeOrderStatus(orderId: UUID, status: OrderStatus) {
+    override fun changeOrderStatusToPaid(orderId: UUID) {
         val orderDto = getOrder(orderId)
 
         meterRegistry.counter("order_status_changed","serviceName","p04",

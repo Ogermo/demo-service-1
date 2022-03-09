@@ -8,8 +8,10 @@ import com.itmo.microservices.demo.orders.api.event.PaymentCreatedEvent
 import com.itmo.microservices.demo.orders.api.event.SlotReserveReponseEvent
 import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.api.service.OrderService
-import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
+import com.itmo.microservices.demo.orders.impl.repository.OrderItemsRepository
 import com.itmo.microservices.demo.stock.api.event.DeleteItemEvent
+import com.itmo.microservices.demo.stock.api.service.StockItemService
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
@@ -21,7 +23,16 @@ class OrderEventListener {
     private lateinit var orderService: OrderService
 
     @Autowired
+    private lateinit var stockItemService: StockItemService
+
+    @Autowired
+    private lateinit var orderItemsRepository: OrderItemsRepository
+
+    @Autowired
     private lateinit var eventBus: EventBus
+
+    @Autowired
+    private lateinit var meterRegistry: MeterRegistry
 
     @PostConstruct
     fun init(){
@@ -53,6 +64,19 @@ class OrderEventListener {
 
     @Subscribe
     fun onOrderPaid(event: OrderPaidEvent) {
-        orderService.changeOrderStatus(event.id, OrderStatus.PAID)
+
+        val orderItems = orderItemsRepository.findByOrderId(event.id)
+        var amountSum = 0.0
+
+        for (item in orderItems) {
+
+            val itemObj = stockItemService.getStockItemById(item.itemId!!)
+
+            amountSum += item.amount!! * itemObj.price
+        }
+
+        meterRegistry.counter("revenue", "serviceName", "p04").increment(amountSum)
+
+        orderService.changeOrderStatusToPaid(event.id)
     }
 }

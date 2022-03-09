@@ -4,9 +4,7 @@ import com.google.common.eventbus.EventBus
 import com.itmo.microservices.commonlib.annotations.InjectEventLogger
 import com.itmo.microservices.commonlib.logging.EventLogger
 import com.itmo.microservices.demo.delivery.api.model.Status
-import com.itmo.microservices.demo.delivery.impl.service.DefaultDeliveryService
 import com.itmo.microservices.demo.orders.api.event.PaymentCreatedEvent
-import com.itmo.microservices.demo.orders.api.event.SlotReserveReponseEvent
 import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.payment.api.model.PaymentSubmissionDto
@@ -17,13 +15,12 @@ import com.itmo.microservices.demo.payment.impl.entity.Payment
 import com.itmo.microservices.demo.payment.impl.logging.PaymentServiceNotableEvents
 import com.itmo.microservices.demo.payment.impl.repository.PaymentRepository
 import org.springframework.stereotype.Service
-import java.sql.Time
 import java.util.*
-import kotlin.random.Random
 import kong.unirest.Unirest
 import kong.unirest.json.JSONObject
 import com.itmo.microservices.demo.payment.impl.util.PaymentServiceMeta
-import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -33,13 +30,19 @@ import java.lang.StringBuilder
 @Service
 class DefaultPaymentService(private val paymentRepository: PaymentRepository,
                             private val orderRepository: OrderRepository,
-                            private val eventBus: EventBus) : PaymentService {
+                            private val eventBus: EventBus, private val meterRegistry: MeterRegistry) : PaymentService {
 
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
 
     @ResponseStatus(value = HttpStatus.SERVICE_UNAVAILABLE, reason = "unable to reach external service")
     class UnableToReachExternalServiceException : RuntimeException()
+
+    val externalSystemExpense : Counter = Counter.builder("external_system_expense")
+        .tag("serviceName","p04")
+        .tag("externalSystemType", "PAYMENT")
+        .description("Money spent on payment external service")
+        .register(meterRegistry)
 
     fun makeTransaction() : JSONObject {
         val url = PaymentServiceMeta.makeTransactionUri()
@@ -148,6 +151,7 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository,
 
         eventLogger.info(PaymentServiceNotableEvents.I_PAYMENT_CREATED, submissionDto)
         eventBus.post(PaymentCreatedEvent(orderId,payment.transactionId, Status.SUCCESS))
+        externalSystemExpense.increment(payment.amount!!.toDouble())
 
         return submissionDto
     }

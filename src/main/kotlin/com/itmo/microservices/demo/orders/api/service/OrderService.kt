@@ -14,6 +14,6 @@ interface OrderService {
     fun book(orderId : UUID, user : UserDetails) : BookingDto?
     fun requestDeductStockItems(orderId: UUID)
     fun deleteOrder(orderId : UUID) : Boolean
-    fun changeOrderStatus(orderId: UUID, status: OrderStatus)
+    fun changeOrderStatusToPaid(orderId: UUID)
 //    fun assignPayment(orderId : UUID, payment : PaymentModel)
 }
