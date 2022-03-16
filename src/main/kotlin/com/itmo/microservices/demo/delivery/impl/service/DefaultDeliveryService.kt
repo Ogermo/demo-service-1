@@ -23,6 +23,8 @@ import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
+import com.itmo.microservices.demo.payment.impl.entity.Payment
+import com.itmo.microservices.demo.payment.impl.repository.PaymentRepository
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.DistributionSummary
 import io.micrometer.core.instrument.MeterRegistry
@@ -44,6 +46,7 @@ import java.util.concurrent.ExecutionException
 
 @Service
 class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
+                             private val paymentRepository : PaymentRepository,
                              private val eventBus: EventBus,
                              private val orderRepository: OrderRepository,  private val meterRegistry: MeterRegistry) : DeliveryService {
 
@@ -77,12 +80,26 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         .description("Current shipping orders")
         .register(meterRegistry)
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 5000)
     override fun checkForRefund() {
         var time = (System.currentTimeMillis() / 1000).toInt()
         val orders = orderRepository.findInWindow((time - 61).toInt(), time.toInt())
         for (order in orders){
-            if (order.status.equals(OrderStatus.SHIPPING)){
+            if (order.status == OrderStatus.SHIPPING){
+                var orderPayments : List<Payment> = paymentRepository.findByOrderId(order.id!!)
+
+                val payment = Payment()
+
+                payment.Id = UUID.randomUUID()
+                payment.orderId = order.id
+                payment.transactionId = orderPayments[0].transactionId
+                payment.openTime = System.currentTimeMillis()
+                payment.closeTime = System.currentTimeMillis()
+                payment.type = 1
+                payment.amount = orderPayments[0].amount
+
+                paymentRepository.save(payment)
+
                 meterRegistry.counter("order_status_changed","serviceName","p04",
                     "fromState",order.status.toString(),
                     "toState",OrderStatus.REFUND.toString()).increment()
@@ -90,6 +107,10 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
                 expiredDelivery.increment()
                 orderRepository.save(order)
                 shipping_orders_total.increment()
+            }
+            else if (order.status == OrderStatus.PAID) {
+                order.status = OrderStatus.SHIPPING
+                orderRepository.save(order)
             }
         }
     }

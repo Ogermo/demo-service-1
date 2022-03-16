@@ -100,7 +100,9 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository,
             orderPayments = paymentRepository.findAll()
         }
         orderPayments.forEach {
-            logs.add(UserAccountFinancialLogRecordDto(FinancialOperationType.WITHDRAW, it.amount!!, it.orderId!!, it.transactionId!!, it.closeTime!!))
+            val type: FinancialOperationType = if (it.type == 0) FinancialOperationType.WITHDRAW
+            else FinancialOperationType.REFUND
+            logs.add(UserAccountFinancialLogRecordDto(type, it.amount!!, it.orderId!!, it.transactionId!!, it.closeTime!!))
         }
 
         return logs
