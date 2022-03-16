@@ -82,8 +82,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
 
     @Scheduled(fixedRate = 5000)
     override fun checkForRefund() {
-        var time = (System.currentTimeMillis() / 1000).toInt()
-        val orders = orderRepository.findInWindow((time - 61).toInt(), time.toInt())
+        val orders = orderRepository.findAll()
         for (order in orders){
             if (order.status == OrderStatus.SHIPPING){
                 var orderPayments : List<Payment> = paymentRepository.findByOrderId(order.id!!)
