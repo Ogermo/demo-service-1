@@ -34,6 +34,8 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
 import java.lang.Math.abs
 import java.util.*
+import java.util.function.Supplier
+import kotlin.collections.ArrayList
 
 @Suppress("UnstableApiUsage")
 @Service
@@ -88,12 +90,6 @@ class DefaultOrderService(
         .tag("serviceName", "p04")
         .description("Amount of times when finalized order is told to add a new item")
         .register(meterRegistry)
-
-//    val current_abandoned_order_num: Gauge = Gauge.builder("current_abandoned_order_num")
-//        .tag("serviceName", "p04")
-//        .description("Abandoned orders streak")
-//        .register(meterRegistry)
-
     val abandoned_order_num_returned: Counter = Counter.builder("current_abandoned_order_returned_num")
         .tag("serviceName", "p04")
         .description("Abandoned orders back to booking")
@@ -174,7 +170,6 @@ class DefaultOrderService(
             .register(meterRegistry)
 
     override fun deleteOrder(orderId: UUID): Boolean {
-
         var order = orderRepository.findByIdOrNull(orderId) ?: throw NotFoundException("Order $orderId not found")
         if (order.status != OrderStatus.COLLECTING) {
             return false

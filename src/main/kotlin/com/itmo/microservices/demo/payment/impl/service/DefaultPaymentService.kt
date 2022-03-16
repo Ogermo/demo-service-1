@@ -24,6 +24,7 @@ import kong.unirest.Unirest
 import kong.unirest.json.JSONObject
 import com.itmo.microservices.demo.payment.impl.util.PaymentServiceMeta
 import com.itmo.microservices.demo.stock.api.event.DeductItemEvent
+import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -35,13 +36,17 @@ import java.lang.StringBuilder
 @Service
 class DefaultPaymentService(private val paymentRepository: PaymentRepository,
                             private val orderRepository: OrderRepository,
-                            private val eventBus: EventBus) : PaymentService {
+                            private val eventBus: EventBus,
+                            private val meterRegistry: MeterRegistry) : PaymentService {
 
-    @Autowired
-    private lateinit var meterRegistry: MeterRegistry
 
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
+
+    val refunded_money_amount: Counter = Counter.builder("refunded_money_amount")
+        .tag("serviceName", "p04")
+        .description("Amount of money that have been refunded")
+        .register(meterRegistry)
 
     @ResponseStatus(value = HttpStatus.SERVICE_UNAVAILABLE, reason = "unable to reach external service")
     class UnableToReachExternalServiceException : RuntimeException()
@@ -156,6 +161,7 @@ class DefaultPaymentService(private val paymentRepository: PaymentRepository,
     }
 
     override fun refundPayment(orderId: UUID, cost: Double): PaymentSubmissionDto {
+        refunded_money_amount.increment(cost)
         return PaymentSubmissionDto(1234, orderId)
     }
 
