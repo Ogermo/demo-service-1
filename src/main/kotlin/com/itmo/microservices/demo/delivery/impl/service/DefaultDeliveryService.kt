@@ -87,7 +87,7 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         for (order in orders){
             if (order.status == OrderStatus.SHIPPING){
                 eventLogger.info(DeliveryServiceNotableEvents.I_REFUND_DO,order.toDto(mapOf()))
-
+                val withdraw = paymentRepository.findByOrderId(order.id!!)
                 val payment = Payment()
 
                 payment.Id = UUID.randomUUID()
@@ -96,7 +96,12 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
                 payment.openTime = System.currentTimeMillis()
                 payment.closeTime = System.currentTimeMillis()
                 payment.type = 1
-                payment.amount = 10
+                payment.amount = 0
+                for (record in withdraw){
+                    if (record.type == 0){
+                        payment.amount = payment.amount!! + record.amount!!
+                    }
+                }
 
                 paymentRepository.save(payment)
 
