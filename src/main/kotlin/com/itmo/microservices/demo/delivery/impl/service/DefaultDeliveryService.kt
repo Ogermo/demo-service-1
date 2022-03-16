@@ -23,6 +23,7 @@ import com.itmo.microservices.demo.orders.api.model.OrderStatus
 import com.itmo.microservices.demo.orders.impl.entity.Order
 import com.itmo.microservices.demo.orders.impl.repository.OrderRepository
 import com.itmo.microservices.demo.orders.impl.util.toBookingDto
+import com.itmo.microservices.demo.orders.impl.util.toDto
 import com.itmo.microservices.demo.payment.impl.entity.Payment
 import com.itmo.microservices.demo.payment.impl.repository.PaymentRepository
 import io.micrometer.core.instrument.Counter
@@ -85,17 +86,17 @@ class DefaultDeliveryService(private val deliveryRepository: DeliveryRepository,
         val orders = orderRepository.findAll()
         for (order in orders){
             if (order.status == OrderStatus.SHIPPING){
-                var orderPayments : List<Payment> = paymentRepository.findByOrderId(order.id!!)
+                eventLogger.info(DeliveryServiceNotableEvents.I_REFUND_DO,order.toDto(mapOf()))
 
                 val payment = Payment()
 
                 payment.Id = UUID.randomUUID()
                 payment.orderId = order.id
-                payment.transactionId = orderPayments[0].transactionId
+                payment.transactionId = UUID.randomUUID()
                 payment.openTime = System.currentTimeMillis()
                 payment.closeTime = System.currentTimeMillis()
                 payment.type = 1
-                payment.amount = orderPayments[0].amount
+                payment.amount = 10
 
                 paymentRepository.save(payment)
 
