@@ -41,4 +41,19 @@ class PaymentController(private val paymentService: PaymentService) {
     )
     fun makePayment(@PathVariable order_id : UUID) : PaymentSubmissionDto = paymentService.makePayment(order_id)
 
+    @GetMapping("/orders/{order_id}/payment-refund")
+    @Operation(
+        summary = "Make payment for order",
+        responses = [
+            ApiResponse(description = "OK", responseCode = "200"),
+            ApiResponse(description = "Unauthorized", responseCode = "403", content = [Content()]),
+            ApiResponse(
+                description = "Service unavailable",
+                responseCode = "503",
+                content = [io.swagger.v3.oas.annotations.media.Content()]
+            )
+        ],
+        security = [SecurityRequirement(name = "bearerAuth")]
+    )
+    fun refunding(@PathVariable order_id: UUID, cost: Double) : PaymentSubmissionDto = paymentService.refundPayment(order_id, cost)
 }

@@ -23,27 +23,30 @@ import com.itmo.microservices.demo.stock.api.model.BookingStatus
 import com.itmo.microservices.demo.stock.api.service.StockItemService
 import com.itmo.microservices.demo.stock.impl.repository.StockItemRepository
 import com.itmo.microservices.demo.users.api.service.UserService
-import io.micrometer.core.instrument.Counter.builder
 import io.micrometer.core.instrument.MeterRegistry
-import io.prometheus.client.Counter
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.Gauge
 import javassist.NotFoundException
 import kong.unirest.HttpStatus
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
+import java.lang.Math.abs
 import java.util.*
 
 @Suppress("UnstableApiUsage")
 @Service
-class DefaultOrderService(private val orderRepository: OrderRepository,
-                          private val orderItemsRepository: OrderItemsRepository,
-                          private val stockItemRepository: StockItemRepository,
-                          private val paymentRepository: PaymentRepository,
-                          private val StockService: StockItemService,
-                          private val eventBus: EventBus,
-                          private val userService: UserService,
-                          private val meterRegistry: MeterRegistry) : OrderService {
+class DefaultOrderService(
+    private val orderRepository: OrderRepository,
+    private val orderItemsRepository: OrderItemsRepository,
+    private val stockItemRepository: StockItemRepository,
+    private val paymentRepository: PaymentRepository,
+    private val StockService: StockItemService,
+    private val eventBus: EventBus,
+    private val userService: UserService,
+    private val meterRegistry: MeterRegistry
+) : OrderService {
 
     @InjectEventLogger
     private lateinit var eventLogger: EventLogger
@@ -80,79 +83,116 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 //        return orderRepository.findByIdOrNull(orderId)?.toModel() ?: throw NotFoundException("Order $orderId not found")
 //    }
 //
-    override fun book(orderId : UUID, user : UserDetails): BookingDto?{
+
+    val finalized_order_request: Counter = Counter.builder("add_to_finalized_order_request")
+        .tag("serviceName", "p04")
+        .description("Amount of times when finalized order is told to add a new item")
+        .register(meterRegistry)
+
+//    val current_abandoned_order_num: Gauge = Gauge.builder("current_abandoned_order_num")
+//        .tag("serviceName", "p04")
+//        .description("Abandoned orders streak")
+//        .register(meterRegistry)
+
+    val abandoned_order_num_returned: Counter = Counter.builder("current_abandoned_order_returned_num")
+        .tag("serviceName", "p04")
+        .description("Abandoned orders back to booking")
+        .register(meterRegistry)
+
+
+    override fun book(orderId: UUID, user: UserDetails): BookingDto? {
         //CartService.booking(orderId);
-        eventLogger.info(OrderServiceNotableEvents.I_ORDER_BOOKED,orderId)
+        eventLogger.info(OrderServiceNotableEvents.I_ORDER_BOOKED, orderId)
         var order = orderRepository.findByIdOrNull(orderId) ?: return Order().toBookingDto(setOf())
-        if(order.status != OrderStatus.COLLECTING){
+        if (order.status != OrderStatus.COLLECTING) {
             return null
         }
         var failedItems = mutableSetOf<UUID>()
         var itemsMap = orderItemsRepository.findByOrderId(orderId)
-        for (item in itemsMap){
+        for (item in itemsMap) {
             var stockItem = stockItemRepository.findByIdOrNull(item.itemId)
-            if (stockItem == null){
-                meterRegistry.counter("item_book_request","serviceName","p04",
-                    "result", "FAILED").increment()
+            if (stockItem == null) {
+                meterRegistry.counter(
+                    "item_book_request", "serviceName", "p04",
+                    "result", "FAILED"
+                ).increment()
                 //itemBookRequest.labels("p04", "FAILED").inc()
                 failedItems.add(item.itemId!!)
-            } else if (stockItem.amount!! < item.amount!!){
+            } else if (stockItem.amount!! < item.amount!!) {
                 //itemBookRequest.labels("p04", "FAILED").inc()
-                meterRegistry.counter("item_book_request","serviceName","p04",
-                    "result", "FAILED").increment()
+                meterRegistry.counter(
+                    "item_book_request", "serviceName", "p04",
+                    "result", "FAILED"
+                ).increment()
                 failedItems.add(item.itemId!!)
-            } else{
+            } else {
 
                 var Am = stockItem.amount
                 if (Am != null) {
                     //itemBookRequest.labels("p04", "SUCCESS").inc()
-                    meterRegistry.counter("item_book_request","serviceName","p04",
-                        "result", "SUCCESS").increment()
-                    eventBus.post(BookingEvent(order.id!!, item.itemId!!, BookingStatus.SUCCESS,
-                        (item.amount)!!.toInt(), System.currentTimeMillis()))
-                }
-                else{
+                    meterRegistry.counter(
+                        "item_book_request", "serviceName", "p04",
+                        "result", "SUCCESS"
+                    ).increment()
+                    eventBus.post(
+                        BookingEvent(
+                            order.id!!, item.itemId!!, BookingStatus.SUCCESS,
+                            (item.amount)!!.toInt(), System.currentTimeMillis()
+                        )
+                    )
+                } else {
                     //itemBookRequest.labels("p04", "FAILED").inc()
-                    meterRegistry.counter("item_book_request","serviceName","p04",
-                        "result", "FAILED").increment()
+                    meterRegistry.counter(
+                        "item_book_request", "serviceName", "p04",
+                        "result", "FAILED"
+                    ).increment()
                     failedItems.add(item.itemId!!)
                 }
             }
         }
-    meterRegistry.counter("order_status_changed","serviceName","p04",
-        "fromState",order.status.toString(),
-        "toState",OrderStatus.BOOKED.toString()).increment()
+        meterRegistry.counter(
+            "order_status_changed", "serviceName", "p04",
+            "fromState", order.status.toString(),
+            "toState", OrderStatus.BOOKED.toString()
+        ).increment()
+        abandoned_order_num_returned.increment()
         order.status = OrderStatus.BOOKED
         //finalizationAttempt.labels("p04", "SUCCESS").inc()
-        meterRegistry.counter("finalization_attempt","serviceName","p04",
-            "result", "SUCCESS").increment()
+        meterRegistry.counter(
+            "finalization_attempt", "serviceName", "p04",
+            "result", "SUCCESS"
+        ).increment()
         orderRepository.save(order)
         return order.toBookingDto(failedItems)
     }
 
 
-    val discarded_orders: io.micrometer.core.instrument.Counter = io.micrometer.core.instrument.Counter.builder("discarded_orders")
-        .tag("serviceName", "p04")
-        .description("Discarded orders")
-        .register(meterRegistry)
+    val discarded_orders: io.micrometer.core.instrument.Counter =
+        io.micrometer.core.instrument.Counter.builder("discarded_orders")
+            .tag("serviceName", "p04")
+            .description("Discarded orders")
+            .register(meterRegistry)
 
-    override fun deleteOrder(orderId: UUID) : Boolean{
+    override fun deleteOrder(orderId: UUID): Boolean {
 
         var order = orderRepository.findByIdOrNull(orderId) ?: throw NotFoundException("Order $orderId not found")
-        if(order.status != OrderStatus.COLLECTING){
+        if (order.status != OrderStatus.COLLECTING) {
             return false
         }
         //eventBus.post(OrderDeletedEvent(order.toModel()))
         //eventLogger.info(OrderServiceNotableEvents.I_ORDER_DELETED, order)
-        meterRegistry.counter("order_status_changed","serviceName","p04",
-            "fromState",order.status.toString(),
-            "toState",OrderStatus.DISCARD.toString()).increment()
+        meterRegistry.counter(
+            "order_status_changed", "serviceName", "p04",
+            "fromState", order.status.toString(),
+            "toState", OrderStatus.DISCARD.toString()
+        ).increment()
         order.status = OrderStatus.DISCARD
         orderRepository.save(order)
         discarded_orders.increment()
         return true
     }
-//
+
+    //
 //    override fun assignPayment(orderId: UUID, payment : PaymentModel) {
 //        var order = orderRepository.findByIdOrNull(orderId) ?: throw NotFoundException("Order $orderId not found")
 //        if(order.status != 0)
@@ -168,35 +208,37 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 //    fun getUserIdByUserDetails(user : UserDetails) : UUID {
 //        return UUID.fromString("0-0-0-0-0")
 //    }
-    override fun createOrder(userId: UUID) : OrderDto {
+    override fun createOrder(userId: UUID): OrderDto {
         //orderCreated.labels("p04").inc()
-        meterRegistry.counter("order_created","serviceName","p04").increment()
+        meterRegistry.counter("order_created", "serviceName", "p04").increment()
         val newOrder = Order(null, System.currentTimeMillis(), OrderStatus.COLLECTING, userId)
-        eventLogger.info(OrderServiceNotableEvents.I_ORDER_CREATED,newOrder)
+        eventLogger.info(OrderServiceNotableEvents.I_ORDER_CREATED, newOrder)
         orderRepository.save(newOrder)
         //CartService.makeCart(newOrder.id)
         return newOrder.toDto(mapOf())
     }
 
-    override fun putItemToOrder(orderId : UUID, itemId : UUID, amount : Int): ResponseEntity<Nothing> {
-        eventLogger.info(OrderServiceNotableEvents.I_ORDER_ADDED, listOf(orderId,itemId,amount))
+    override fun putItemToOrder(orderId: UUID, itemId: UUID, amount: Int): ResponseEntity<Nothing> {
+        eventLogger.info(OrderServiceNotableEvents.I_ORDER_ADDED, listOf(orderId, itemId, amount))
 
         val item = stockItemRepository.findByIdOrNull(itemId)
-        if(item == null || item.amount!! < amount){
+        if (item == null || item.amount!! < amount) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         }
-        val order = orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
-        if(order.status == OrderStatus.BOOKED){
+        val order =
+            orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        if (order.status == OrderStatus.BOOKED) {
             //unbook it
+            finalized_order_request.increment()
             order.status == OrderStatus.COLLECTING
             orderRepository.save(order)
             orderItemsRepository.deleteByOrderId(order.id!!)
         }
-        if(order.status != OrderStatus.COLLECTING){
+        if (order.status != OrderStatus.COLLECTING) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         }
         //itemAdded.labels("p04").inc()
-        meterRegistry.counter("item_added","serviceName","p04").increment()
+        meterRegistry.counter("item_added", "serviceName", "p04").increment()
 //        var itemList = orderItemsRepository.findByOrderId(orderId)
 //        for (x in itemList){
 //            if(x.itemId!!.equals(itemId)){
@@ -211,17 +253,17 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 //        }
 //        orderItemsRepository.save(OrderItems(null,orderId,itemId,amount))
         var itemList = orderItemsRepository.findByOrderId(orderId)
-        for (x in itemList){
-            if(x.itemId!!.equals(itemId)){
-                orderItemsRepository.save(OrderItems(x.id,orderId,itemId,amount))
+        for (x in itemList) {
+            if (x.itemId!!.equals(itemId)) {
+                orderItemsRepository.save(OrderItems(x.id, orderId, itemId, amount))
                 //CartService.putItemInCart(orderId, itemId, amount)
                 return ResponseEntity.status(HttpStatus.OK).body(null)
             }
         }
-        orderItemsRepository.save(OrderItems(null,orderId,itemId,amount))
+        orderItemsRepository.save(OrderItems(null, orderId, itemId, amount))
         return ResponseEntity.status(HttpStatus.OK).body(null)
 
-    //        var order = orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        //        var order = orderRepository.findByIdOrNull(orderId) ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
 //        if (itemId in order.itemsMap.keys){
 //            var currentAmount = order.itemsMap[itemId] ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
 //            order.itemsMap[itemId] = amount + currentAmount
@@ -236,11 +278,13 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
 
     override fun getOrder(orderId: UUID): OrderDto {
         Thread.sleep(300) //DELETE ME LATER
-        eventLogger.info(OrderServiceNotableEvents.I_ORDER_CHECKED,orderId)
+        eventLogger.info(OrderServiceNotableEvents.I_ORDER_CHECKED, orderId)
         val order = orderRepository.findByIdOrNull(orderId) ?: return Order().toDto(mapOf())
-        eventLogger.info(OrderServiceNotableEvents.I_ORDER_DESCRIPTION,order.toDto(mapOf()))
-        return order.toDto(orderItemsRepository.findByOrderId(orderId).map{it.itemId!! to it.amount!!}.toMap(),
-        paymentRepository.findByOrderId(orderId).toDto())
+        eventLogger.info(OrderServiceNotableEvents.I_ORDER_DESCRIPTION, order.toDto(mapOf()))
+        return order.toDto(
+            orderItemsRepository.findByOrderId(orderId).map { it.itemId!! to it.amount!! }.toMap(),
+            paymentRepository.findByOrderId(orderId).toDto()
+        )
     }
 
     override fun requestDeductStockItems(orderId: UUID) {
@@ -258,9 +302,11 @@ class DefaultOrderService(private val orderRepository: OrderRepository,
     override fun changeOrderStatusToPaid(orderId: UUID) {
         val orderDto = getOrder(orderId)
 
-        meterRegistry.counter("order_status_changed","serviceName","p04",
-            "fromState",orderDto.status.toString(),
-            "toState",OrderStatus.PAID.toString()).increment()
+        meterRegistry.counter(
+            "order_status_changed", "serviceName", "p04",
+            "fromState", orderDto.status.toString(),
+            "toState", OrderStatus.PAID.toString()
+        ).increment()
 
         orderDto.status = OrderStatus.PAID
 

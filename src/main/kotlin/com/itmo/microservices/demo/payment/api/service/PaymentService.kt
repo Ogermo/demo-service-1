@@ -7,4 +7,5 @@ import java.util.*
 interface PaymentService {
     fun getFinLog(orderId: UUID?) : List<UserAccountFinancialLogRecordDto>
     fun makePayment(orderId: UUID) : PaymentSubmissionDto
+    fun refundPayment(orderId : UUID, cost : Double) : PaymentSubmissionDto
 }
